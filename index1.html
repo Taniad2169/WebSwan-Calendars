@@ -3,654 +3,1769 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Calendar</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>📅 Appointment Booking · WebSwan</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; }
+        html { scroll-behavior: smooth; }
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: #73c9de;
             min-height: 100vh;
-        }
-
-        .header {
-            background-color: #0dbfde;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .target-animated, .bell-animated {
-            font-size: 2rem;
-            position: absolute;
-            top: 10px; /* Higher position */
-            animation: target-move 4s ease-in-out infinite;
-        }
-
-        @keyframes target-move {
-            0% {
-                transform: translateX(-100px);
-                opacity: 0;
-            }
-            50% {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            100% {
-                transform: translateX(100px);
-                opacity: 0;
-            }
-        }
-
-        @keyframes bell-ring {
-            0% { transform: rotate(0); }
-            15% { transform: rotate(15deg); }
-            30% { transform: rotate(-15deg); }
-            45% { transform: rotate(15deg); }
-            60% { transform: rotate(-15deg); }
-            75% { transform: rotate(0); }
-            100% { transform: rotate(0); }
-        }
-
-        .bell-ring-animation {
-            animation: bell-ring 1s ease-in-out;
-        }
-
-        .btn-custom {
-            background-color: #66d5e8;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-
-        .btn-custom:hover {
-            background-color: #5abed1;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 1.8rem 1.2rem;
+        }
+        .main-card {
+            max-width: 960px;
+            width: 100%;
+            background: white;
+            border-radius: 2.8rem;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.25);
+            padding: 2rem 2rem 1.8rem;
+        }
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.3rem;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: #eef7fa;
+            padding: 0.2rem 1.2rem 0.2rem 0.8rem;
+            border-radius: 60px;
+            border: 1px solid #bcdce7;
+        }
+        .logo-icon { font-size: 2.4rem; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05)); }
+        .logo-text { font-weight: 700; font-size: 1.15rem; color: #1a3d4b; letter-spacing: -0.3px; }
+        .smile-anim {
+            font-size: 2.6rem;
+            margin-left: 0.2rem;
+            display: inline-block;
+            animation: smile-rock 2.6s cubic-bezier(.36,.07,.19,.97) infinite;
+            will-change: transform;
+            user-select: none;
+            filter: drop-shadow(0 1px 4px rgba(30,46,109,0.08));
+        }
+        @keyframes smile-rock {
+            0% { transform: rotate(-10deg); }
+            20% { transform: rotate(6deg); }
+            50% { transform: rotate(-7deg); }
+            80% { transform: rotate(7deg); }
+            100% { transform: rotate(-10deg); }
+        }
+        
+        .admin-lock {
+            font-size: 1.8rem;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.3s ease;
+            padding: 0.2rem 0.7rem;
+            opacity: 0.6;
+            display: inline-flex;
+            align-items: center;
+            background: transparent;
+            border-radius: 40px;
+            border: 2px solid transparent;
+            position: relative;
+        }
+        .admin-lock:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+            background: rgba(115, 201, 222, 0.1);
+            border-color: rgba(115, 201, 222, 0.3);
+        }
+        .admin-lock:active {
+            transform: scale(0.92);
+        }
+        .admin-lock.unlocked {
+            opacity: 1;
+            background: rgba(76, 175, 80, 0.15);
+            border-color: #4caf50;
+            cursor: default;
+        }
+        .admin-lock .lock-icon {
+            transition: all 0.3s ease;
+        }
+        .admin-lock .click-feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 40px;
+            background: rgba(115, 201, 222, 0.15);
+            animation: clickPulse 0.4s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes clickPulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.4); opacity: 0; }
+        }
+
+        .copy-link-btn {
+            background: #e8f0fe;
+            border: 1px solid #d2e3fc;
+            padding: 0.3rem 1rem 0.3rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            color: #1a73e8;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+        .copy-link-btn:hover {
+            background: #d2e3fc;
+            transform: scale(1.05);
+        }
+        .copy-link-btn.copied {
+            background: #c8e6c9;
+            color: #2e7d32;
+            border-color: #4caf50;
+        }
+
+        .subhead {
+            color: #1f4f5e;
+            margin: 0.4rem 0 1.5rem 0;
+            font-size: 1rem;
+            border-left: 4px solid #73c9de;
+            padding-left: 1rem;
+            background: #f2fafd;
+            border-radius: 0 16px 16px 0;
+            line-height: 1.4;
+            padding: 0.5rem 1rem;
+        }
+        .subhead i { color: #0f6b7e; margin-right: 6px; }
+        .calendar-wrapper {
+            background: #f6fafc;
+            border-radius: 2rem;
+            padding: 1.5rem 1.5rem 0.8rem;
+            margin-bottom: 1.8rem;
+            border: 1px solid #d7e9f0;
+            scroll-margin-top: 20px;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1.3rem;
+            color: #12303e;
+            margin-bottom: 1rem;
+            padding: 0 0.25rem;
+        }
+        .calendar-header button {
+            background: transparent;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #2c6c7e;
+            padding: 0 0.6rem;
+            transition: 0.2s;
+        }
+        .calendar-header button:hover { color: #054a5c; transform: scale(1.05); }
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7,1fr);
+            text-align: center;
+            font-weight: 600;
+            color: #1c4b5a;
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+        }
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7,1fr);
+            gap: 5px;
+        }
+        .day-cell {
+            background: white;
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: #1a2e3f;
+            cursor: pointer;
+            transition: 0.15s;
+            border: 1px solid transparent;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            position: relative;
+        }
+        .day-cell:hover:not(.empty):not(.disabled):not(.blocked) { background: #d4eaf3; border-color: #73c9de; }
+        .day-cell.selected { background: #73c9de; color: white; font-weight: 600; border-color: #3d9bb0; box-shadow: 0 4px 8px rgba(115,201,222,0.4); }
+        .day-cell.empty { background: transparent; pointer-events: none; box-shadow: none; }
+        .day-cell.disabled { opacity: 0.3; cursor: not-allowed; background: #f0f4f7; }
+        .day-cell.blocked { background: #f8d7da; color: #721c24; cursor: not-allowed; opacity: 0.7; border-color: #f5c6cb; }
+        .day-cell.blocked::after { content: "🚫"; font-size: 0.7rem; position: absolute; top: -2px; right: -2px; }
+        .day-cell.blocked-month { background: #e2d4f0; color: #4a2d7a; cursor: not-allowed; opacity: 0.7; border-color: #d4c4e0; }
+        .day-cell.blocked-month::after { content: "📅"; font-size: 0.7rem; position: absolute; top: -2px; right: -2px; }
+        .day-cell.clickable {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .day-cell.clickable:active {
+            transform: scale(0.92);
+        }
+        .info-badge {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            background: #e5f3f8;
+            border-radius: 60px;
+            padding: 0.5rem 1.2rem;
+            margin: 1rem 0 0.3rem;
+            font-size: 0.9rem;
+            color: #0a3b49;
+        }
+        .info-badge i { margin-right: 8px; color: #136b7e; }
+        .hours-badge {
+            background: white;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .form-section {
+            margin-top: 1.2rem;
+            scroll-margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        .form-section.highlight {
+            animation: formHighlight 0.6s ease;
+        }
+        @keyframes formHighlight {
+            0% { background: rgba(115, 201, 222, 0.1); padding: 1rem; border-radius: 30px; }
+            50% { background: rgba(115, 201, 222, 0.2); padding: 1rem; border-radius: 30px; box-shadow: 0 0 30px rgba(115, 201, 222, 0.3); }
+            100% { background: transparent; padding: 0; box-shadow: none; }
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+        .form-group {
+            flex: 1 1 180px;
+            min-width: 140px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            font-size: 0.8rem;
+            letter-spacing: 0.3px;
+            color: #1f4b5c;
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1px solid #d4e2e9;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            background: white;
+            transition: 0.2s;
+            outline: none;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: #73c9de;
+            box-shadow: 0 0 0 3px rgba(115, 201, 222, 0.3);
+        }
+        .form-group textarea {
+            border-radius: 20px;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+        .comment-box { flex: 1 1 100%; }
+        .comment-box label i { color: #0d6b7e; }
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1.8rem;
+            gap: 1rem;
+        }
+        .selected-display {
+            background: #ecf7fa;
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
+            font-size: 0.95rem;
+            color: #074b5e;
+            transition: all 0.3s ease;
+        }
+        .selected-display.has-selection {
+            background: #73c9de;
+            color: white;
+            box-shadow: 0 4px 12px rgba(115, 201, 222, 0.3);
+        }
+        .selected-display.has-selection span {
+            color: white;
+        }
+        .selected-display span { font-weight: 600; color: #023845; }
+        .btn-submit {
+            background: #1c7b8f;
+            border: none;
+            padding: 0.8rem 2.8rem;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 6px 14px rgba(28, 123, 143, 0.35);
+            border: 1px solid #116b7e;
+        }
+        .btn-submit:hover { background: #0e6579; transform: scale(0.97); box-shadow: 0 4px 10px rgba(28, 123, 143, 0.4); }
+        .btn-submit i { font-size: 1.2rem; }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .footnote {
+            font-size: 0.8rem;
+            margin-top: 1.2rem;
+            color: #2f5b6b;
+            border-top: 1px dashed #b6d7e3;
+            padding-top: 1.2rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .footnote i { margin-right: 5px; color: #136b7e; }
+
+        .scroll-hint {
+            display: none;
+            text-align: center;
+            margin: 0.5rem 0 0.2rem;
+            font-size: 0.85rem;
+            color: #2f5b6b;
+            animation: bounce 1.5s infinite;
+        }
+        .scroll-hint.show { display: block; }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .scroll-hint i { color: #73c9de; margin-right: 6px; }
+
+        /* BACK OFFICE */
+        .backoffice-section {
+            margin-top: 2.2rem;
+            border-top: 2px solid #d7e9f0;
+            padding-top: 1.2rem;
+        }
+        .backoffice-toggle {
+            background: #e5f3f8;
+            border: none;
+            padding: 0.5rem 1.8rem;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #0a3b49;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        }
+        .backoffice-toggle:hover:not(.locked) { background: #cfe6ef; }
+        .backoffice-toggle.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .backoffice-toggle.unlocked {
+            opacity: 1;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+        .backoffice-panel {
+            margin-top: 1.2rem;
+            background: #f2f8fb;
+            border-radius: 1.8rem;
+            padding: 1.2rem 1.5rem;
+            border: 1px solid #cfe0e8;
+            display: none;
+        }
+        .backoffice-panel.open { display: block; }
+        .backoffice-panel h3 {
+            font-size: 1.1rem;
+            color: #0f4355;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .backoffice-panel h3 i { color: #1b7a8f; }
+        .bo-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            align-items: flex-end;
+            margin-bottom: 1.2rem;
+        }
+        .bo-group {
+            flex: 1 1 140px;
+            min-width: 100px;
+        }
+        .bo-group label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #1f4b5c;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+        .bo-group input,
+        .bo-group select {
+            width: 100%;
+            padding: 0.5rem 0.8rem;
+            border: 1px solid #c7dbe5;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            background: white;
+        }
+        .bo-group.time-range {
+            flex: 1 1 100px;
+            min-width: 80px;
+        }
+        .bo-group.time-range select {
+            padding: 0.5rem 0.5rem;
+        }
+        .bo-btn {
+            background: #1c7b8f;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 0.9rem;
+            border: 1px solid #116b7e;
+            white-space: nowrap;
+        }
+        .bo-btn:hover { background: #0e6579; }
+        .bo-btn.danger { background: #b0c9d4; border-color: #8ba9b6; }
+        .bo-btn.unblock-btn { background: #e67e22; border-color: #d35400; }
+        .bo-btn.unblock-btn:hover { background: #d35400; }
+        .bo-list {
+            background: white;
+            border-radius: 1.2rem;
+            padding: 0.8rem 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            border: 1px solid #cfe0e8;
+        }
+        .bo-list-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid #edf4f8;
+        }
+        .bo-list-item:last-child { border-bottom: none; }
+        .bo-empty { color: #5a7b88; font-style: italic; }
+        .badge-block { 
+            background: #f8d7da; 
+            color: #721c24; 
+            padding: 0.1rem 0.6rem; 
+            border-radius: 30px; 
+            font-size: 0.7rem;
+            margin-right: 4px;
+        }
+        .badge-time { background: #fff3cd; color: #856404; }
+        .badge-month { background: #d4edda; color: #155724; }
+        
+        .key-click-area {
+            cursor: pointer;
+            user-select: none;
+            transition: 0.2s;
+            padding: 0.1rem 0.5rem;
+            border-radius: 30px;
+            background: #e8f0fe;
+            border: 2px solid transparent;
+            font-size: 1.2rem;
+        }
+        .key-click-area:hover {
+            background: #d2e3fc;
+            border-color: #1a73e8;
+            transform: scale(1.05);
+        }
+        .key-click-area.lock-mode {
+            background: #ffe0e0;
+            border-color: #e74c3c;
+        }
+        .key-click-area.lock-mode:hover {
+            background: #ffcccc;
+        }
+
+        /* UNBLOCK MODAL */
+        .unblock-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .unblock-modal.show { display: flex; }
+        .unblock-modal-content {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 2rem;
+            max-width: 420px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .unblock-modal-content h3 {
+            margin-bottom: 1rem;
+            color: #1a3d4b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .unblock-modal-content .close-unblock {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #999;
+        }
+        .unblock-modal-content .mini-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin: 0.8rem 0;
+        }
+        .unblock-modal-content .mini-calendar .mini-day {
+            padding: 0.6rem 0;
+            text-align: center;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.15s;
+            background: #f6fafc;
+            font-size: 0.85rem;
+        }
+        .unblock-modal-content .mini-calendar .mini-day:hover {
+            background: #d4eaf3;
+        }
+        .unblock-modal-content .mini-calendar .mini-day.selected {
+            background: #73c9de;
+            color: white;
+        }
+        .unblock-modal-content .mini-calendar .mini-day.empty {
+            background: transparent;
+            cursor: default;
+        }
+        .unblock-modal-content .mini-calendar .mini-day.blocked {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .unblock-modal-content .mini-calendar .mini-day.blocked-month {
+            background: #e2d4f0;
+            color: #4a2d7a;
+        }
+        .unblock-modal-content .mini-calendar .mini-day.unblockable {
+            cursor: pointer;
+        }
+        .unblock-modal-content .mini-calendar .mini-day:not(.unblockable) {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .unblock-modal-content .time-select {
+            display: flex;
+            gap: 0.5rem;
+            margin: 0.8rem 0;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .unblock-modal-content .time-select select {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #d4e2e9;
+            border-radius: 30px;
+            font-size: 0.9rem;
+        }
+        .unblock-modal-content .unblock-action {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.8rem;
+            justify-content: flex-end;
+        }
+        .unblock-modal-content .unblock-action button {
+            padding: 0.5rem 1.5rem;
+            border-radius: 40px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .unblock-modal-content .unblock-action .btn-unblock-confirm {
+            background: #e67e22;
+            color: white;
+        }
+        .unblock-modal-content .unblock-action .btn-unblock-confirm:hover {
+            background: #d35400;
+        }
+        .unblock-modal-content .unblock-action .btn-unblock-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+        .unblock-modal-content .unblock-action .btn-unblock-cancel:hover {
+            background: #ccc;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a3d4b;
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 60px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            font-weight: 500;
+            z-index: 999;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            max-width: 90vw;
+        }
+        .toast.show { display: flex; }
+        .toast i { color: #73c9de; }
+
+        /* KEY MODAL */
+        .key-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
             z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
         }
-        .modal-content {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        .key-modal.show { display: flex; }
+        .key-modal-content {
+            background: white;
+            padding: 2rem 2rem 1.8rem;
+            border-radius: 2rem;
+            max-width: 350px;
             width: 90%;
-            max-width: 500px;
+            text-align: center;
+            position: relative;
         }
-        .hidden {
-            display: none !important;
+        .key-modal-content .key-icon {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 0.8rem;
         }
-        .bg-blue-appointment {
-            background-color: #9de3eb;
+        .key-modal-content input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 2px solid #d4e2e9;
+            border-radius: 40px;
+            font-size: 1rem;
+            margin: 0.5rem 0;
+            outline: none;
+            transition: 0.2s;
         }
-        .bg-green-task {
-            background-color: #47edcc;
+        .key-modal-content input:focus {
+            border-color: #73c9de;
+            box-shadow: 0 0 0 3px rgba(115, 201, 222, 0.3);
         }
-        .blocked-day {
-            background-color: #ffcccc;
-            color: #888;
+        .key-modal-content button {
+            background: #1c7b8f;
+            color: white;
+            border: none;
+            padding: 0.7rem 2.5rem;
+            border-radius: 40px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: 0.2s;
+            font-weight: 600;
+        }
+        .key-modal-content button:hover {
+            background: #0e6579;
+            transform: scale(0.97);
+        }
+        .key-modal-content .error { 
+            color: #d22; 
+            font-size: 0.85rem; 
+            margin-top: 0.5rem; 
+            min-height: 1.2rem;
+        }
+        .key-modal-content .close-key {
+            position: absolute;
+            right: 1rem;
+            top: 0.8rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        /* Admin locked state - hide back office completely */
+        .admin-locked .backoffice-section {
+            display: none;
         }
     </style>
+</head>
+<body>
+    <div class="main-card" id="mainCard">
 
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+        <div class="brand-header">
+            <div class="logo-area">
+                <span class="logo-icon">🦢</span>
+                <span class="logo-text">WebSwan</span>
+            </div>
+            <span class="smile-anim" role="img" aria-label="smile">😀</span>
+            <span class="admin-lock" id="adminLock">
+                <span class="lock-icon" id="lockIcon">🔐</span>
+            </span>
+            <button class="copy-link-btn" id="copyLinkBtn">
+                <i class="fas fa-copy"></i> <span id="copyText">Copy Link</span>
+            </button>
+            <span style="font-weight:500; color:#1c4b5a; margin-left:auto; font-size:0.9rem; display:flex; align-items:center; gap:8px;">
+                <i class="fas fa-calendar-alt"></i> booking
+            </span>
+        </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-analytics.js"></script>
+        <div class="subhead">
+            <i class="fas fa-comment-dots"></i> Send a day or time suggestion — I will see if I can accommodate. Add your preferred date & time in the comment box (250 words max)
+        </div>
+
+        <div class="calendar-wrapper" id="calendarWrapper">
+            <div class="calendar-header">
+                <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                <span id="monthYear"></span>
+                <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="weekdays">
+                <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+            </div>
+            <div class="days-grid" id="daysGrid"></div>
+            <div class="info-badge">
+                <span><i class="fas fa-clock"></i> Open: Tue, Thu, Fri · 12:00 – 16:00</span>
+                <span class="hours-badge"><i class="far fa-calendar-alt"></i> requests welcome</span>
+            </div>
+            <div class="scroll-hint" id="scrollHint">
+                <i class="fas fa-arrow-down"></i> Scroll down to fill in your details
+            </div>
+        </div>
+
+        <div class="form-section" id="formSection">
+            <div class="form-row">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Full name</label>
+                    <input type="text" id="fullName" placeholder="e.g. Jamie Rivera" />
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="email" placeholder="name@example.com" />
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-phone-alt"></i> Phone</label>
+                    <input type="tel" id="phone" placeholder="+1 234 567 890" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group comment-box">
+                    <label><i class="fas fa-pencil-alt"></i> Comment · preferred date & time (max 250 words)</label>
+                    <textarea id="commentBox" placeholder="e.g. I'd love to connect on Thursday 3pm, or Friday morning if possible. Let me know what works!" maxlength="1250"></textarea>
+                    <small style="display:block;margin-top:4px;color:#2a5c6e;"><i class="far fa-circle"></i> 250 word limit · suggest a day/time</small>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <div class="selected-display" id="selectedDisplay">
+                    <i class="fas fa-calendar-day"></i> Selected: <span id="selectedDateDisplay">none</span>
+                </div>
+                <button class="btn-submit" id="submitBtn"><i class="fab fa-whatsapp"></i> Submit</button>
+            </div>
+            <div class="footnote">
+                <span><i class="fas fa-check-circle"></i> WhatsApp · Google Calendar · Google Tasks</span>
+                <span><i class="fas fa-hourglass-half"></i> I'll review & accommodate if possible</span>
+            </div>
+        </div>
+
+        <!-- BACK OFFICE - Hidden by default -->
+        <div class="backoffice-section" id="backofficeSection">
+            <button class="backoffice-toggle locked" id="boToggle" disabled><i class="fas fa-lock"></i> Admin · back office 🔒</button>
+            <div class="backoffice-panel" id="boPanel">
+                <h3>
+                    <i class="fas fa-clipboard-list"></i> Manage appointments & blocks
+                    <span class="key-click-area" id="keyClickArea" title="Click to lock admin panel">🔒</span>
+                    <span style="font-size:0.7rem;color:#555;font-weight:400;" id="keyCounter">0/3</span>
+                    <button class="bo-btn unblock-btn" id="unblockBtn" style="margin-left:auto;"><i class="fas fa-trash-alt"></i> Unblock</button>
+                </h3>
+
+                <div class="bo-row">
+                    <div class="bo-group">
+                        <label>Block Type</label>
+                        <select id="blockType">
+                            <option value="day">Day</option>
+                            <option value="time">Time Range</option>
+                            <option value="month">Full Month</option>
+                        </select>
+                    </div>
+                    <div class="bo-group">
+                        <label>Date</label>
+                        <input type="date" id="blockDate" />
+                    </div>
+                    <div class="bo-group time-range" id="timeFromGroup" style="display:none;">
+                        <label>From</label>
+                        <select id="blockTimeFrom">
+                            <option value="12:00">12:00</option>
+                            <option value="12:30">12:30</option>
+                            <option value="13:00">1:00</option>
+                            <option value="13:30">1:30</option>
+                            <option value="14:00">2:00</option>
+                            <option value="14:30">2:30</option>
+                            <option value="15:00">3:00</option>
+                            <option value="15:30">3:30</option>
+                            <option value="16:00">4:00</option>
+                        </select>
+                    </div>
+                    <div class="bo-group time-range" id="timeToGroup" style="display:none;">
+                        <label>To</label>
+                        <select id="blockTimeTo">
+                            <option value="12:30">12:30</option>
+                            <option value="13:00">1:00</option>
+                            <option value="13:30">1:30</option>
+                            <option value="14:00">2:00</option>
+                            <option value="14:30">2:30</option>
+                            <option value="15:00">3:00</option>
+                            <option value="15:30">3:30</option>
+                            <option value="16:00">4:00</option>
+                        </select>
+                    </div>
+                    <button class="bo-btn" id="addBlockBtn"><i class="fas fa-ban"></i> Block</button>
+                </div>
+
+                <div class="bo-row">
+                    <div class="bo-group" style="flex:2">
+                        <label>Task description</label>
+                        <input type="text" id="taskDesc" placeholder="Task description (250 words max)" />
+                    </div>
+                    <button class="bo-btn" id="addTaskBtn"><i class="fas fa-tasks"></i> Add Task → Google Tasks</button>
+                </div>
+
+                <div class="bo-list" id="boList">
+                    <div class="bo-empty">No appointments or blocks yet.</div>
+                </div>
+                <div style="margin-top:0.7rem;font-size:0.8rem;color:#2f5b6b;">
+                    <i class="fas fa-info-circle"></i> Click the lock icon to unlock admin panel.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UNBLOCK MODAL -->
+    <div class="unblock-modal" id="unblockModal">
+        <div class="unblock-modal-content">
+            <h3>
+                <span>🗑️ Unblock</span>
+                <button class="close-unblock" id="closeUnblockModal">&times;</button>
+            </h3>
+            <div class="bo-group" style="margin-bottom:0.8rem;">
+                <label>Select type to unblock</label>
+                <select id="unblockType">
+                    <option value="day">Day</option>
+                    <option value="time">Time Range</option>
+                    <option value="month">Full Month</option>
+                </select>
+            </div>
+            <div id="unblockMonthView" style="display:none;">
+                <label style="font-size:0.8rem;font-weight:600;color:#1f4b5c;">Select month to unblock</label>
+                <div class="mini-calendar" id="unblockMonthGrid"></div>
+            </div>
+            <div id="unblockDayView">
+                <label style="font-size:0.8rem;font-weight:600;color:#1f4b5c;">Select date to unblock</label>
+                <div class="mini-calendar" id="unblockDayGrid"></div>
+            </div>
+            <div id="unblockTimeView" style="display:none;">
+                <label style="font-size:0.8rem;font-weight:600;color:#1f4b5c;">Select date & time range to unblock</label>
+                <div class="mini-calendar" id="unblockTimeGrid"></div>
+                <div class="time-select">
+                    <label style="font-size:0.75rem;font-weight:600;">From</label>
+                    <select id="unblockTimeFrom">
+                        <option value="12:00">12:00</option>
+                        <option value="12:30">12:30</option>
+                        <option value="13:00">1:00</option>
+                        <option value="13:30">1:30</option>
+                        <option value="14:00">2:00</option>
+                        <option value="14:30">2:30</option>
+                        <option value="15:00">3:00</option>
+                        <option value="15:30">3:30</option>
+                        <option value="16:00">4:00</option>
+                    </select>
+                    <label style="font-size:0.75rem;font-weight:600;">To</label>
+                    <select id="unblockTimeTo">
+                        <option value="12:30">12:30</option>
+                        <option value="13:00">1:00</option>
+                        <option value="13:30">1:30</option>
+                        <option value="14:00">2:00</option>
+                        <option value="14:30">2:30</option>
+                        <option value="15:00">3:00</option>
+                        <option value="15:30">3:30</option>
+                        <option value="16:00">4:00</option>
+                    </select>
+                </div>
+            </div>
+            <div class="unblock-action">
+                <button class="btn-unblock-cancel" id="cancelUnblock">Cancel</button>
+                <button class="btn-unblock-confirm" id="confirmUnblock">Unblock</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KEY MODAL -->
+    <div class="key-modal" id="keyModal">
+        <div class="key-modal-content">
+            <button class="close-key" id="closeKeyModal">&times;</button>
+            <span class="key-icon">🗝️</span>
+            <input type="password" id="keyInput" placeholder="Enter key" autofocus />
+            <button id="keySubmitBtn">Unlock</button>
+            <div class="error" id="keyError"></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toastMsg">Done!</span></div>
 
     <script>
-      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-      const firebaseConfig = {
-        apiKey: "AIzaSyB50YiZNBFj0dgwwA9iEHqqvAurQ5HcvD0",
-        authDomain: "the-webswan-calendar.firebaseapp.com",
-        projectId: "the-webswan-calendar",
-        storageBucket: "the-webswan-calendar.firebasestorage.app",
-        messagingSenderId: "412434435868",
-        appId: "1:412434435868:web:f850dee0d43a406cc634d9",
-        measurementId: "G-P3YX9PCV63"
-      };
+        (function() {
+            // ---------- STATE ----------
+            const today = new Date();
+            let currentMonth = today.getMonth();
+            let currentYear = today.getFullYear();
+            let selectedDate = null;
+            let appointments = [];
+            let blockedDays = [];
+            let blockedTimes = {};
+            let blockedMonths = [];
+            let isAdminUnlocked = false;
+            let lockClickCount = 0;
+            let keyClickCount = 0;
+            let isSubmitting = false;
+            const ADMIN_KEY = '2169';
+            const PAGE_URL = 'https://taniad2169.github.io/WebSwan-Calendars/';
 
-      // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
+            // DOM refs
+            const monthYearSpan = document.getElementById('monthYear');
+            const daysGrid = document.getElementById('daysGrid');
+            const selectedDateDisplay = document.getElementById('selectedDateDisplay');
+            const selectedDisplay = document.getElementById('selectedDisplay');
+            const formSection = document.getElementById('formSection');
+            const scrollHint = document.getElementById('scrollHint');
+            const fullNameInput = document.getElementById('fullName');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+            const commentBox = document.getElementById('commentBox');
+            const submitBtn = document.getElementById('submitBtn');
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const adminLock = document.getElementById('adminLock');
+            const lockIcon = document.getElementById('lockIcon');
+            const boToggle = document.getElementById('boToggle');
+            const boPanel = document.getElementById('boPanel');
+            const boList = document.getElementById('boList');
+            const blockType = document.getElementById('blockType');
+            const blockDate = document.getElementById('blockDate');
+            const blockTimeFrom = document.getElementById('blockTimeFrom');
+            const blockTimeTo = document.getElementById('blockTimeTo');
+            const timeFromGroup = document.getElementById('timeFromGroup');
+            const timeToGroup = document.getElementById('timeToGroup');
+            const addBlockBtn = document.getElementById('addBlockBtn');
+            const addTaskBtn = document.getElementById('addTaskBtn');
+            const taskDesc = document.getElementById('taskDesc');
+            const keyModal = document.getElementById('keyModal');
+            const keyInput = document.getElementById('keyInput');
+            const keySubmitBtn = document.getElementById('keySubmitBtn');
+            const keyError = document.getElementById('keyError');
+            const closeKeyModal = document.getElementById('closeKeyModal');
+            const keyClickArea = document.getElementById('keyClickArea');
+            const keyCounter = document.getElementById('keyCounter');
+            const copyLinkBtn = document.getElementById('copyLinkBtn');
+            const copyText = document.getElementById('copyText');
+            const backofficeSection = document.getElementById('backofficeSection');
+
+            // Unblock modal
+            const unblockModal = document.getElementById('unblockModal');
+            const closeUnblockModal = document.getElementById('closeUnblockModal');
+            const cancelUnblock = document.getElementById('cancelUnblock');
+            const confirmUnblock = document.getElementById('confirmUnblock');
+            const unblockType = document.getElementById('unblockType');
+            const unblockDayGrid = document.getElementById('unblockDayGrid');
+            const unblockTimeGrid = document.getElementById('unblockTimeGrid');
+            const unblockMonthGrid = document.getElementById('unblockMonthGrid');
+            const unblockDayView = document.getElementById('unblockDayView');
+            const unblockTimeView = document.getElementById('unblockTimeView');
+            const unblockMonthView = document.getElementById('unblockMonthView');
+            const unblockTimeFrom = document.getElementById('unblockTimeFrom');
+            const unblockTimeTo = document.getElementById('unblockTimeTo');
+            const unblockBtn = document.getElementById('unblockBtn');
+
+            let unblockSelectedDate = null;
+            let unblockSelectedMonth = null;
+
+            // Set default date
+            blockDate.value = today.toISOString().split('T')[0];
+
+            // ---------- LOCK / UNLOCK FUNCTIONS ----------
+            function lockAdmin() {
+                isAdminUnlocked = false;
+                adminLock.classList.remove('unlocked');
+                lockIcon.textContent = '🔐';
+                boToggle.disabled = true;
+                boToggle.classList.remove('unlocked');
+                boToggle.classList.add('locked');
+                boToggle.innerHTML = '<i class="fas fa-lock"></i> Admin · back office 🔒';
+                boPanel.classList.remove('open');
+                backofficeSection.style.display = 'none';
+                lockClickCount = 0;
+                // Reset key click counter
+                keyClickCount = 0;
+                keyCounter.textContent = '0/3';
+                keyClickArea.textContent = '🔒';
+                keyClickArea.classList.add('lock-mode');
+                showToast('🔒 Admin panel locked', 'warning');
+            }
+
+            function unlockAdmin() {
+                isAdminUnlocked = true;
+                adminLock.classList.add('unlocked');
+                lockIcon.textContent = '🔓';
+                boToggle.disabled = false;
+                boToggle.classList.remove('locked');
+                boToggle.classList.add('unlocked');
+                boToggle.innerHTML = '<i class="fas fa-unlock"></i> Admin · back office 🔓';
+                backofficeSection.style.display = 'block';
+                keyClickArea.textContent = '🔓';
+                keyClickArea.classList.remove('lock-mode');
+                lockClickCount = 0;
+                showToast('✅ Admin unlocked!', 'success');
+            }
+
+            // ---------- COPY LINK ----------
+            copyLinkBtn.addEventListener('click', function() {
+                navigator.clipboard.writeText(PAGE_URL).then(() => {
+                    copyText.textContent = '✅ Copied!';
+                    copyLinkBtn.classList.add('copied');
+                    setTimeout(() => {
+                        copyText.textContent = 'Copy Link';
+                        copyLinkBtn.classList.remove('copied');
+                    }, 3000);
+                    showToast('✅ Link copied to clipboard!', 'success');
+                }).catch(() => {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = PAGE_URL;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    copyText.textContent = '✅ Copied!';
+                    copyLinkBtn.classList.add('copied');
+                    setTimeout(() => {
+                        copyText.textContent = 'Copy Link';
+                        copyLinkBtn.classList.remove('copied');
+                    }, 3000);
+                    showToast('✅ Link copied to clipboard!', 'success');
+                });
+            });
+
+            // ---------- SMOOTH SCROLL TO FORM ----------
+            function scrollToForm() {
+                const target = document.getElementById('formSection');
+                const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - 30;
+                
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+
+                formSection.classList.remove('highlight');
+                void formSection.offsetWidth;
+                formSection.classList.add('highlight');
+                
+                setTimeout(() => {
+                    fullNameInput.focus();
+                }, 700);
+            }
+
+            // ---------- CALENDAR HELPERS ----------
+            function getMonthName(month) {
+                return new Date(currentYear, month, 1).toLocaleString('en', { month: 'long' });
+            }
+
+            function getDateStr(year, month, day) {
+                return `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            }
+
+            function isDayBlocked(dateStr) {
+                return blockedDays.includes(dateStr);
+            }
+
+            function isMonthBlocked(year, month) {
+                const monthStr = `${year}-${String(month+1).padStart(2,'0')}`;
+                return blockedMonths.includes(monthStr);
+            }
+
+            function isTimeBlocked(dateStr, timeStr) {
+                if (!blockedTimes[dateStr]) return false;
+                return blockedTimes[dateStr].some(range => {
+                    const [from, to] = range.split('-');
+                    return timeStr >= from && timeStr < to;
+                });
+            }
+
+            function renderCalendar() {
+                const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+                let startOffset = firstDayOfMonth.getDay();
+                startOffset = (startOffset === 0) ? 6 : startOffset - 1;
+                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+                monthYearSpan.textContent = `${getMonthName(currentMonth)} ${currentYear}`;
+                let gridHTML = '';
+
+                for (let i = 0; i < startOffset; i++) {
+                    gridHTML += `<div class="day-cell empty"></div>`;
+                }
+
+                const monthBlocked = isMonthBlocked(currentYear, currentMonth);
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const cellDate = new Date(currentYear, currentMonth, d);
+                    const dayOfWeek = cellDate.getDay();
+                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                    const isAllowedDay = (dayOfWeek === 2 || dayOfWeek === 4 || dayOfWeek === 5);
+                    const cellDateOnly = new Date(currentYear, currentMonth, d);
+                    const isPast = cellDateOnly < todayDateOnly;
+                    const dateStr = getDateStr(currentYear, currentMonth, d);
+                    const isBlocked = isDayBlocked(dateStr) || monthBlocked;
+
+                    let classes = 'day-cell';
+                    if (isPast) classes += ' disabled';
+                    else if (!isAllowedDay) classes += ' disabled';
+                    else if (isBlocked) {
+                        if (monthBlocked) classes += ' blocked-month';
+                        else classes += ' blocked';
+                    } else classes += ' clickable';
+
+                    if (selectedDate && selectedDate.getDate() === d &&
+                        selectedDate.getMonth() === currentMonth &&
+                        selectedDate.getFullYear() === currentYear) {
+                        classes += ' selected';
+                    }
+
+                    gridHTML += `<div class="${classes}" data-day="${d}" data-month="${currentMonth}" data-year="${currentYear}">${d}</div>`;
+                }
+
+                daysGrid.innerHTML = gridHTML;
+
+                document.querySelectorAll('.day-cell.clickable:not(.disabled):not(.blocked):not(.blocked-month)').forEach(cell => {
+                    cell.addEventListener('click', function() {
+                        const day = parseInt(this.dataset.day);
+                        const month = parseInt(this.dataset.month);
+                        const year = parseInt(this.dataset.year);
+                        const newSelected = new Date(year, month, day);
+                        if (selectedDate && selectedDate.getTime() === newSelected.getTime()) return;
+                        selectedDate = newSelected;
+                        updateSelectedDisplay();
+                        renderCalendar();
+                        scrollToForm();
+                        scrollHint.classList.add('show');
+                        setTimeout(() => {
+                            scrollHint.classList.remove('show');
+                        }, 3000);
+                    });
+                });
+
+                if (selectedDate) {
+                    scrollHint.classList.add('show');
+                    setTimeout(() => {
+                        scrollHint.classList.remove('show');
+                    }, 3000);
+                }
+            }
+
+            function updateSelectedDisplay() {
+                if (selectedDate) {
+                    const displayText = selectedDate.toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    selectedDateDisplay.textContent = displayText;
+                    selectedDisplay.classList.add('has-selection');
+                } else {
+                    selectedDateDisplay.textContent = 'none';
+                    selectedDisplay.classList.remove('has-selection');
+                }
+            }
+
+            // Navigation
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                if (currentMonth === 0) { currentMonth = 11; currentYear--; } else { currentMonth--; }
+                renderCalendar();
+            });
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                if (currentMonth === 11) { currentMonth = 0; currentYear++; } else { currentMonth++; }
+                renderCalendar();
+            });
+
+            // ---------- ADMIN UNLOCK: 7 clicks on 🔐 ----------
+            adminLock.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (isAdminUnlocked) return;
+                
+                lockClickCount++;
+                
+                const feedback = document.createElement('span');
+                feedback.className = 'click-feedback';
+                adminLock.appendChild(feedback);
+                setTimeout(() => {
+                    feedback.remove();
+                }, 400);
+                
+                if (lockClickCount >= 7) {
+                    unlockAdmin();
+                    lockClickCount = 0;
+                }
+            });
+
+            // ---------- KEY CLICK TO LOCK ADMIN ----------
+            keyClickArea.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (!isAdminUnlocked) {
+                    showToast('🔐 Admin is already locked.', 'warning');
+                    return;
+                }
+                // Lock the admin panel
+                lockAdmin();
+                // Reset the key counter
+                keyClickCount = 0;
+                keyCounter.textContent = '0/3';
+                // Close any open panels
+                boPanel.classList.remove('open');
+            });
+
+            // ---------- KEY MODAL (3 clicks on key when unlocked) ----------
+            // We already use keyClickArea for locking, so we keep the 3-click for the key modal
+            // But now the key click area locks instead of opens modal
+            // So we need a separate way to open the key modal - we'll use double-click or keep it hidden
+            // Actually, let's keep the key modal for the password feature
+            // But we'll change the interaction: clicking the key when unlocked locks, 
+            // and we'll use a different trigger for the password modal
+            // For now, let's keep the key modal as a separate feature - we'll use the key emoji in the header
+
+            // ---------- TOGGLE BACK OFFICE ----------
+            boToggle.addEventListener('click', function() {
+                if (!isAdminUnlocked) {
+                    showToast('🔐 Click the lock icon to unlock admin.', 'warning');
+                    return;
+                }
+                boPanel.classList.toggle('open');
+                if (boPanel.classList.contains('open')) renderBoList();
+            });
+
+            // ---------- BLOCK TYPE TOGGLE ----------
+            blockType.addEventListener('change', function() {
+                const showTime = this.value === 'time';
+                timeFromGroup.style.display = showTime ? 'block' : 'none';
+                timeToGroup.style.display = showTime ? 'block' : 'none';
+            });
+
+            // ---------- ADD BLOCK ----------
+            addBlockBtn.addEventListener('click', function() {
+                if (!isAdminUnlocked) {
+                    showToast('🔐 Please unlock admin first.', 'warning');
+                    return;
+                }
+                
+                const type = blockType.value;
+                const date = blockDate.value;
+                const from = blockTimeFrom.value;
+                const to = blockTimeTo.value;
+
+                if (!date) { showToast('Please select a date.', 'warning'); return; }
+
+                if (type === 'day') {
+                    if (!blockedDays.includes(date)) {
+                        blockedDays.push(date);
+                        showToast(`🚫 Blocked day: ${date}`, 'success');
+                    } else {
+                        showToast('Day already blocked.', 'warning');
+                    }
+                } else if (type === 'time') {
+                    if (!blockedTimes[date]) blockedTimes[date] = [];
+                    const range = `${from}-${to}`;
+                    if (!blockedTimes[date].includes(range)) {
+                        blockedTimes[date].push(range);
+                        showToast(`🚫 Blocked ${from} - ${to} on ${date}`, 'success');
+                    } else {
+                        showToast('Time range already blocked on this day.', 'warning');
+                    }
+                } else if (type === 'month') {
+                    const monthStr = date.substring(0, 7);
+                    if (!blockedMonths.includes(monthStr)) {
+                        blockedMonths.push(monthStr);
+                        showToast(`📅 Blocked month: ${monthStr}`, 'success');
+                    } else {
+                        showToast('Month already blocked.', 'warning');
+                    }
+                }
+
+                renderBoList();
+                renderCalendar();
+            });
+
+            // ---------- TASK TO GOOGLE TASKS ----------
+            addTaskBtn.addEventListener('click', function() {
+                if (!isAdminUnlocked) {
+                    showToast('🔐 Please unlock admin first.', 'warning');
+                    return;
+                }
+                
+                const task = taskDesc.value.trim();
+                if (!task) { showToast('Please enter a task description.', 'warning'); return; }
+                if (task.length > 1250) { showToast('Task description too long (max 250 words).', 'warning'); return; }
+
+                const url = `https://tasks.google.com/tasks/?utm_source=OGB&utm_medium=app&q=${encodeURIComponent(task)}`;
+                window.open(url, '_blank');
+                showToast('✅ Task opened in Google Tasks!', 'success');
+                taskDesc.value = '';
+            });
+
+            // ---------- UNBLOCK MODAL ----------
+            unblockBtn.addEventListener('click', function() {
+                if (!isAdminUnlocked) {
+                    showToast('🔐 Please unlock admin first.', 'warning');
+                    return;
+                }
+                unblockModal.classList.add('show');
+                unblockSelectedDate = null;
+                unblockSelectedMonth = null;
+                renderUnblockCalendar();
+                updateUnblockView();
+            });
+
+            closeUnblockModal.addEventListener('click', function() {
+                unblockModal.classList.remove('show');
+            });
+
+            cancelUnblock.addEventListener('click', function() {
+                unblockModal.classList.remove('show');
+            });
+
+            unblockModal.addEventListener('click', function(e) {
+                if (e.target === unblockModal) {
+                    unblockModal.classList.remove('show');
+                }
+            });
+
+            unblockType.addEventListener('change', function() {
+                updateUnblockView();
+                renderUnblockCalendar();
+            });
+
+            function updateUnblockView() {
+                const type = unblockType.value;
+                unblockDayView.style.display = type === 'day' ? 'block' : 'none';
+                unblockTimeView.style.display = type === 'time' ? 'block' : 'none';
+                unblockMonthView.style.display = type === 'month' ? 'block' : 'none';
+            }
+
+            function renderUnblockCalendar() {
+                const type = unblockType.value;
+                const grid = type === 'month' ? unblockMonthGrid : (type === 'time' ? unblockTimeGrid : unblockDayGrid);
+                
+                if (type === 'month') {
+                    let html = '';
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const currentYear2 = today.getFullYear();
+                    for (let m = 0; m < 12; m++) {
+                        const monthStr = `${currentYear2}-${String(m+1).padStart(2,'0')}`;
+                        const isBlocked = blockedMonths.includes(monthStr);
+                        const classes = `mini-day ${isBlocked ? 'blocked-month unblockable' : ''}`;
+                        html += `<div class="${classes}" data-month="${m}" data-year="${currentYear2}">${months[m]}</div>`;
+                    }
+                    grid.innerHTML = html;
+                    grid.querySelectorAll('.mini-day.unblockable').forEach(el => {
+                        el.addEventListener('click', function() {
+                            const month = parseInt(this.dataset.month);
+                            const year = parseInt(this.dataset.year);
+                            unblockSelectedMonth = `${year}-${String(month+1).padStart(2,'0')}`;
+                            grid.querySelectorAll('.mini-day').forEach(d => d.classList.remove('selected'));
+                            this.classList.add('selected');
+                        });
+                    });
+                } else {
+                    const todayDate = new Date();
+                    const viewMonth = todayDate.getMonth();
+                    const viewYear = todayDate.getFullYear();
+                    const firstDay = new Date(viewYear, viewMonth, 1);
+                    let startOffset = firstDay.getDay();
+                    startOffset = (startOffset === 0) ? 6 : startOffset - 1;
+                    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+                    
+                    let html = '';
+                    const dayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+                    for (let i = 0; i < 7; i++) {
+                        html += `<div style="font-size:0.7rem;text-align:center;font-weight:600;color:#555;">${dayNames[i]}</div>`;
+                    }
+                    for (let i = 0; i < startOffset; i++) {
+                        html += `<div class="mini-day empty"></div>`;
+                    }
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        const dateStr = getDateStr(viewYear, viewMonth, d);
+                        const isBlocked = isDayBlocked(dateStr) || 
+                            (blockedTimes[dateStr] && blockedTimes[dateStr].length > 0);
+                        const classes = `mini-day ${isBlocked ? 'blocked unblockable' : ''}`;
+                        html += `<div class="${classes}" data-day="${d}" data-month="${viewMonth}" data-year="${viewYear}">${d}</div>`;
+                    }
+                    grid.innerHTML = html;
+                    grid.querySelectorAll('.mini-day.unblockable').forEach(el => {
+                        el.addEventListener('click', function() {
+                            const day = parseInt(this.dataset.day);
+                            const month = parseInt(this.dataset.month);
+                            const year = parseInt(this.dataset.year);
+                            unblockSelectedDate = getDateStr(year, month, day);
+                            grid.querySelectorAll('.mini-day').forEach(d => d.classList.remove('selected'));
+                            this.classList.add('selected');
+                        });
+                    });
+                }
+            }
+
+            confirmUnblock.addEventListener('click', function() {
+                const type = unblockType.value;
+                let removed = false;
+
+                if (type === 'month') {
+                    if (!unblockSelectedMonth) {
+                        showToast('Please select a blocked month.', 'warning');
+                        return;
+                    }
+                    const index = blockedMonths.indexOf(unblockSelectedMonth);
+                    if (index !== -1) {
+                        blockedMonths.splice(index, 1);
+                        removed = true;
+                        showToast(`✅ Unblocked month: ${unblockSelectedMonth}`, 'success');
+                    } else {
+                        showToast('Month is not blocked.', 'warning');
+                    }
+                } else if (type === 'day') {
+                    if (!unblockSelectedDate) {
+                        showToast('Please select a blocked day.', 'warning');
+                        return;
+                    }
+                    const index = blockedDays.indexOf(unblockSelectedDate);
+                    if (index !== -1) {
+                        blockedDays.splice(index, 1);
+                        removed = true;
+                        showToast(`✅ Unblocked day: ${unblockSelectedDate}`, 'success');
+                    } else {
+                        showToast('Day is not blocked.', 'warning');
+                    }
+                } else if (type === 'time') {
+                    if (!unblockSelectedDate) {
+                        showToast('Please select a date with blocked time.', 'warning');
+                        return;
+                    }
+                    const from = unblockTimeFrom.value;
+                    const to = unblockTimeTo.value;
+                    const range = `${from}-${to}`;
+                    if (blockedTimes[unblockSelectedDate]) {
+                        const index = blockedTimes[unblockSelectedDate].indexOf(range);
+                        if (index !== -1) {
+                            blockedTimes[unblockSelectedDate].splice(index, 1);
+                            if (blockedTimes[unblockSelectedDate].length === 0) {
+                                delete blockedTimes[unblockSelectedDate];
+                            }
+                            removed = true;
+                            showToast(`✅ Unblocked ${from}-${to} on ${unblockSelectedDate}`, 'success');
+                        } else {
+                            showToast('Time range not blocked on this date.', 'warning');
+                        }
+                    } else {
+                        showToast('No time blocks on this date.', 'warning');
+                    }
+                }
+
+                if (removed) {
+                    renderBoList();
+                    renderCalendar();
+                    unblockModal.classList.remove('show');
+                }
+            });
+
+            // ---------- RENDER BACK OFFICE LIST ----------
+            function renderBoList() {
+                let html = '';
+
+                if (appointments.length > 0) {
+                    appointments.forEach((a, idx) => {
+                        html += `<div class="bo-list-item">
+                            <span><strong>📅 ${a.date}</strong> ${a.time} · ${a.client}</span>
+                            <span><button class="bo-btn danger" style="padding:0.1rem 0.8rem;font-size:0.7rem;" data-idx="${idx}">✕</button></span>
+                        </div>`;
+                    });
+                }
+
+                if (blockedDays.length > 0) {
+                    blockedDays.forEach(d => {
+                        html += `<div class="bo-list-item">
+                            <span><span class="badge-block">🚫 Blocked day</span> ${d}</span>
+                            <span><button class="bo-btn danger" style="padding:0.1rem 0.8rem;font-size:0.7rem;" data-unblock-day="${d}">✕</button></span>
+                        </div>`;
+                    });
+                }
+
+                for (const [date, times] of Object.entries(blockedTimes)) {
+                    times.forEach(t => {
+                        html += `<div class="bo-list-item">
+                            <span><span class="badge-block badge-time">🚫 Blocked time</span> ${date} ${t}</span>
+                            <span><button class="bo-btn danger" style="padding:0.1rem 0.8rem;font-size:0.7rem;" data-unblock-time="${date}|${t}">✕</button></span>
+                        </div>`;
+                    });
+                }
+
+                if (blockedMonths.length > 0) {
+                    blockedMonths.forEach(m => {
+                        html += `<div class="bo-list-item">
+                            <span><span class="badge-block badge-month">📅 Blocked month</span> ${m}</span>
+                            <span><button class="bo-btn danger" style="padding:0.1rem 0.8rem;font-size:0.7rem;" data-unblock-month="${m}">✕</button></span>
+                        </div>`;
+                    });
+                }
+
+                if (html === '') {
+                    html = '<div class="bo-empty">No appointments or blocks yet.</div>';
+                }
+
+                boList.innerHTML = html;
+
+                boList.querySelectorAll('[data-idx]').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const idx = parseInt(this.dataset.idx);
+                        appointments.splice(idx, 1);
+                        renderBoList();
+                        renderCalendar();
+                    });
+                });
+
+                boList.querySelectorAll('[data-unblock-day]').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const day = this.dataset.unblockDay;
+                        blockedDays = blockedDays.filter(d => d !== day);
+                        renderBoList();
+                        renderCalendar();
+                        showToast(`✅ Unblocked day: ${day}`, 'success');
+                    });
+                });
+
+                boList.querySelectorAll('[data-unblock-time]').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const [date, time] = this.dataset.unblockTime.split('|');
+                        if (blockedTimes[date]) {
+                            blockedTimes[date] = blockedTimes[date].filter(t => t !== time);
+                            if (blockedTimes[date].length === 0) delete blockedTimes[date];
+                        }
+                        renderBoList();
+                        renderCalendar();
+                        showToast(`✅ Unblocked ${time} on ${date}`, 'success');
+                    });
+                });
+
+                boList.querySelectorAll('[data-unblock-month]').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const month = this.dataset.unblockMonth;
+                        blockedMonths = blockedMonths.filter(m => m !== month);
+                        renderBoList();
+                        renderCalendar();
+                        showToast(`✅ Unblocked month: ${month}`, 'success');
+                    });
+                });
+            }
+
+            // ---------- SUBMIT ----------
+            const API_URL = 'https://your-backend.vercel.app/api/book';
+
+            submitBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                if (isSubmitting) return;
+
+                const name = fullNameInput.value.trim() || 'Guest';
+                const email = emailInput.value.trim() || 'no-email@example.com';
+                const phone = phoneInput.value.trim() || 'not provided';
+                const comment = commentBox.value.trim() || 'No comment';
+
+                if (!selectedDate) {
+                    showToast('Please select a date on the calendar first.', 'warning');
+                    return;
+                }
+
+                const dateStr = selectedDate.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                const isoDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth()+1).padStart(2,'0')}-${String(selectedDate.getDate()).padStart(2,'0')}`;
+
+                if (isDayBlocked(isoDate) || isMonthBlocked(selectedDate.getFullYear(), selectedDate.getMonth())) {
+                    showToast('⚠️ This date is blocked. Please select another day.', 'warning');
+                    return;
+                }
+
+                const waMessage = `📅 *Appointment request*%0A%0A` +
+                    `👤 Name: ${name}%0A` +
+                    `📧 Email: ${email}%0A` +
+                    `📞 Phone: ${phone}%0A` +
+                    `📆 Selected date: ${dateStr}%0A` +
+                    `💬 Comment: ${comment}%0A%0A` +
+                    `⏰ (Tue/Thu/Fri · 12-16h) — I'll check availability.`;
+
+                const waNumber = '14158770687';
+
+                const appointmentData = {
+                    name,
+                    email,
+                    phone,
+                    date: isoDate,
+                    comment,
+                    time: '12:00',
+                    timezone: 'America/New_York'
+                };
+
+                isSubmitting = true;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(appointmentData)
+                    });
+
+                    let calendarStatus = '';
+                    if (response.ok) {
+                        calendarStatus = ' ✅ Added to Google Calendar';
+                    } else {
+                        calendarStatus = ' ⚠️ Calendar sync failed, but WhatsApp sent.';
+                        console.warn('Calendar API error:', await response.text());
+                    }
+
+                    window.open(`https://wa.me/${waNumber}?text=${waMessage}`, '_blank');
+
+                    appointments.push({
+                        date: isoDate,
+                        time: '12:00',
+                        client: name
+                    });
+
+                    if (comment && comment.length > 0) {
+                        const taskUrl = `https://tasks.google.com/tasks/?utm_source=OGB&utm_medium=app&q=${encodeURIComponent(`Appointment: ${name} - ${comment}`)}`;
+                        setTimeout(() => {
+                            window.open(taskUrl, '_blank');
+                        }, 500);
+                    }
+
+                    renderBoList();
+                    renderCalendar();
+                    showToast(`✅ Booking sent! ${calendarStatus}`, 'success');
+
+                    fullNameInput.value = '';
+                    emailInput.value = '';
+                    phoneInput.value = '';
+                    commentBox.value = '';
+                    selectedDate = null;
+                    updateSelectedDisplay();
+                    renderCalendar();
+
+                } catch (err) {
+                    console.error('Submission error:', err);
+                    window.open(`https://wa.me/${waNumber}?text=${waMessage}`, '_blank');
+                    showToast('⚠️ Booking sent via WhatsApp, but calendar sync failed.', 'warning');
+                } finally {
+                    isSubmitting = false;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Submit';
+                }
+            });
+
+            // ---------- TOAST ----------
+            function showToast(msg, type = 'success') {
+                toastMsg.textContent = msg;
+                toast.className = 'toast show';
+                if (type === 'warning') {
+                    toast.style.borderLeft = '4px solid #ffc107';
+                } else {
+                    toast.style.borderLeft = '4px solid #73c9de';
+                }
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 5000);
+            }
+
+            // ---------- INIT ----------
+            // Start locked
+            lockAdmin();
+            backofficeSection.style.display = 'none';
+            
+            renderCalendar();
+            updateSelectedDisplay();
+            renderBoList();
+            timeFromGroup.style.display = 'none';
+            timeToGroup.style.display = 'none';
+
+            console.log('🔐 Admin panel is locked by default');
+            console.log('🔑 Click the lock 7 times to unlock');
+            console.log('🔒 Click the key in the back office to lock again');
+            console.log('🔗 Calendar URL:', PAGE_URL);
+        })();
     </script>
-</head>
-<body class="p-8">
-
-    <div class="header relative mb-8 rounded-lg">
-        <h1 class="text-3xl font-bold relative z-10">Personal Calendar</h1>
-        <span class="target-animated" style="left: 10%;">🎯</span>
-        <span class="target-animated" style="right: 10%;">🎯</span>
-        <span id="bell-emoji" class="bell-animated hidden" style="left: 50%;">🔔</span>
-    </div>
-
-    <div class="bg-white p-6 rounded-lg shadow-lg">
-        <div class="flex justify-between items-center mb-4">
-            <button id="prevMonth" class="btn-custom py-1 px-3">&lt;</button>
-            <h2 id="currentMonthYear" class="text-2xl font-bold"></h2>
-            <button id="nextMonth" class="btn-custom py-1 px-3">&gt;</button>
-        </div>
-        <div id="calendar" class="grid grid-cols-7 gap-1 text-center text-sm font-bold">
-            <div class="text-gray-500">Sun</div>
-            <div class="text-gray-500">Mon</div>
-            <div class="text-gray-500">Tue</div>
-            <div class="text-gray-500">Wed</div>
-            <div class="text-gray-500">Thu</div>
-            <div class="text-gray-500">Fri</div>
-            <div class="text-gray-500">Sat</div>
-        </div>
-    </div>
-    
-    <div class="flex justify-center space-x-4 mt-8">
-        <button id="viewEventsBtn" class="btn-custom">Saved Events</button>
-        <button id="addTaskBtn" class="btn-custom">Add Task</button>
-        <button id="viewTasksBtn" class="btn-custom">View Tasks</button>
-        <button id="blockBtn" class="btn-custom bg-red-500 hover:bg-red-600">Block Day/Hours</button>
-        <button id="unblockBtn" class="btn-custom bg-green-500 hover:bg-green-600">Unblock Day/Hours</button>
-    </div>
-
-    <div id="eventModal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h3 class="text-xl font-bold mb-4">Add Event</h3>
-            <div class="mb-4">
-                <label for="eventType" class="block mb-2 text-sm font-medium text-gray-700">Event Type:</label>
-                <select id="eventType" class="w-full p-2 border rounded-md">
-                    <option value="doctor">Doctor's Appointment</option>
-                    <option value="vacation">Vacation</option>
-                    <option value="travel">Travel</option>
-                    <option value="party">Party</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            <div id="otherEventContainer" class="mb-4 hidden">
-                <label for="otherEvent" class="block mb-2 text-sm font-medium text-gray-700">Other Event (50 words):</label>
-                <textarea id="otherEvent" class="w-full p-2 border rounded-md" rows="2" maxlength="250"></textarea>
-            </div>
-            <div class="mb-4">
-                <label for="eventTime" class="block mb-2 text-sm font-medium text-gray-700">Time:</label>
-                <select id="eventTime" class="w-full p-2 border rounded-md"></select>
-            </div>
-            <div class="flex justify-end space-x-2">
-                <button class="btn-custom bg-gray-500 hover:bg-gray-600" id="closeEventModal">Cancel</button>
-                <button class="btn-custom" id="saveEventBtn">Save Event</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="taskModal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h3 class="text-xl font-bold mb-4">Add Task</h3>
-            <div class="mb-4">
-                <label for="taskType" class="block mb-2 text-sm font-medium text-gray-700">Task Type:</label>
-                <select id="taskType" class="w-full p-2 border rounded-md">
-                    <option value="demo">Working on a demo</option>
-                    <option value="webdesign">Working a custom web design</option>
-                    <option value="calendar">Working a calendar</option>
-                    <option value="form">Working a form</option>
-                    <option value="callback">Call back prospect</option>
-                    <option value="call">Call</option>
-                    <option value="text">Text</option>
-                    <option value="email">Send email</option>
-                    <option value="collaborate">Collaborate</option>
-                    <option value="zoommeeting">Zoom meeting</option>
-                    <option value="livenetworking">Live networking</option>
-                    <option value="zoomnetworking">Zoom networking</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            <div id="otherTaskContainer" class="mb-4 hidden">
-                <label for="otherTask" class="block mb-2 text-sm font-medium text-gray-700">Other Task (50 words):</label>
-                <textarea id="otherTask" class="w-full p-2 border rounded-md" rows="2" maxlength="250"></textarea>
-            </div>
-            <div class="flex justify-end space-x-2">
-                <button class="btn-custom bg-gray-500 hover:bg-gray-600" id="closeTaskModal">Cancel</button>
-                <button class="btn-custom" id="saveTaskBtn">Save Task</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="savedItemsModal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h3 id="savedItemsTitle" class="text-xl font-bold mb-4">Saved Events</h3>
-            <div id="savedItemsList" class="space-y-4"></div>
-            <div class="flex justify-end mt-4">
-                <button class="btn-custom bg-gray-500 hover:bg-gray-600" id="closeSavedItemsModal">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="blockModal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h3 class="text-xl font-bold mb-4">Block Time</h3>
-            <div class="mb-4">
-                <label for="blockDateSelector" class="block mb-2 text-sm font-medium text-gray-700">Select Date to Block:</label>
-                <input type="date" id="blockDateSelector" class="w-full p-2 border rounded-md">
-            </div>
-            <div class="flex items-center mb-4">
-                <button id="blockFullDayBtn" class="btn-custom bg-red-500 hover:bg-red-600">🛑 Block Full Day</button>
-            </div>
-            <div class="mb-4">
-                <label for="blockStartTime" class="block mb-2 text-sm font-medium text-gray-700">Start Time:</label>
-                <select id="blockStartTime" class="w-full p-2 border rounded-md"></select>
-            </div>
-            <div class="mb-4">
-                <label for="blockEndTime" class="block mb-2 text-sm font-medium text-gray-700">End Time:</label>
-                <select id="blockEndTime" class="w-full p-2 border rounded-md"></select>
-            </div>
-            <div class="flex justify-end space-x-2">
-                <button class="btn-custom bg-gray-500 hover:bg-gray-600" id="closeBlockModal">Cancel</button>
-                <button class="btn-custom" id="saveBlockBtn">Save Block</button>
-            </div>
-        </div>
-    </div>
-    
-    <div id="unblockModal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h3 class="text-xl font-bold mb-4">Unblock Time</h3>
-            <div class="mb-4">
-                <label for="unblockDateSelector" class="block mb-2 text-sm font-medium text-gray-700">Select Date to Unblock:</label>
-                <input type="date" id="unblockDateSelector" class="w-full p-2 border rounded-md">
-            </div>
-            <div id="unblockTimesList" class="space-y-2 mb-4"></div>
-            <div class="flex justify-end space-x-2">
-                <button class="btn-custom bg-gray-500 hover:bg-gray-600" id="closeUnblockModal">Close</button>
-            </div>
-        </div>
-    </div>
-    <div class="flex justify-center space-x-4 mt-8">
-        <a href="index.html">
-    <button class="btn-custom">Go Back to Business Calendar</button>
-</a>
-    </div>
-
-<script>
-    const calendarEl = document.getElementById('calendar');
-    const currentMonthYearEl = document.getElementById('currentMonthYear');
-    const prevMonthBtn = document.getElementById('prevMonth');
-    const nextMonthBtn = document.getElementById('nextMonth');
-    const eventModal = document.getElementById('eventModal');
-    const taskModal = document.getElementById('taskModal');
-    const savedItemsModal = document.getElementById('savedItemsModal');
-    const eventTypeEl = document.getElementById('eventType');
-    const otherEventContainer = document.getElementById('otherEventContainer');
-    const otherTaskContainer = document.getElementById('otherTaskContainer');
-    const taskTypeEl = document.getElementById('taskType');
-    const eventTimeEl = document.getElementById('eventTime');
-    const savedItemsList = document.getElementById('savedItemsList');
-    const viewEventsBtn = document.getElementById('viewEventsBtn');
-    const addTaskBtn = document.getElementById('addTaskBtn');
-    const viewTasksBtn = document.getElementById('viewTasksBtn');
-    const blockBtn = document.getElementById('blockBtn');
-    const unblockBtn = document.getElementById('unblockBtn');
-    const blockModal = document.getElementById('blockModal');
-    const unblockModal = document.getElementById('unblockModal');
-    const blockDateSelector = document.getElementById('blockDateSelector');
-    const blockFullDayBtn = document.getElementById('blockFullDayBtn');
-    const blockStartTimeEl = document.getElementById('blockStartTime');
-    const blockEndTimeEl = document.getElementById('blockEndTime');
-    const saveBlockBtn = document.getElementById('saveBlockBtn');
-    const unblockDateSelector = document.getElementById('unblockDateSelector');
-    const unblockTimesList = document.getElementById('unblockTimesList');
-    const bellEmojiEl = document.getElementById('bell-emoji');
-
-    let currentMonth = new Date().getMonth();
-    let currentYear = new Date().getFullYear();
-    let selectedDate = null;
-    let savedEvents = JSON.parse(localStorage.getItem('savedEvents')) || [];
-    let savedTasks = JSON.parse(localStorage.getItem('savedTasks')) || [];
-    let blockedTimes = JSON.parse(localStorage.getItem('blockedTimes')) || [];
-    let notifiedTasks = JSON.parse(localStorage.getItem('notifiedTasks')) || {};
-    const bellSound = new Audio('uplifting_bell.wav');
-
-    function generateCalendar(month, year) {
-        calendarEl.innerHTML = `
-            <div class="text-gray-500">Sun</div>
-            <div class="text-gray-500">Mon</div>
-            <div class="text-gray-500">Tue</div>
-            <div class="text-gray-500">Wed</div>
-            <div class="text-gray-500">Thu</div>
-            <div class="text-gray-500">Fri</div>
-            <div class="text-gray-500">Sat</div>
-        `;
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        currentMonthYearEl.textContent = new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-        for (let i = 0; i < firstDay; i++) {
-            const emptyCell = document.createElement('div');
-            calendarEl.appendChild(emptyCell);
-        }
-
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dayCell = document.createElement('div');
-            dayCell.className = `p-2 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors duration-200`;
-            dayCell.textContent = day;
-
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const isBlocked = blockedTimes.some(b => b.date === dateStr && b.time === 'full-day');
-            
-            if (isBlocked) {
-                dayCell.classList.add('blocked-day');
-                dayCell.classList.remove('cursor-pointer', 'hover:bg-blue-100');
-                dayCell.title = "This day is blocked";
-            }
-
-            const hasEvent = savedEvents.some(event => event.date === dateStr);
-            if (hasEvent) {
-                dayCell.classList.add('bg-blue-appointment');
-                dayCell.title = 'Has a saved event';
-            }
-
-            const hasTask = savedTasks.some(task => task.date === dateStr);
-            if (hasTask) {
-                dayCell.classList.add('bg-green-task');
-                dayCell.title = 'Has a saved task';
-            }
-
-            dayCell.addEventListener('click', () => {
-                if (isBlocked) return;
-                selectedDate = dateStr;
-                eventModal.classList.remove('hidden');
-                generateTimeOptions(eventTimeEl, 5, 23);
-            });
-
-            calendarEl.appendChild(dayCell);
-        }
-    }
-
-    function generateTimeOptions(selectElement, startHour, endHour) {
-        selectElement.innerHTML = '';
-        for (let hour = startHour; hour <= endHour; hour++) {
-            const option = document.createElement('option');
-            const formattedHour = String(hour).padStart(2, '0');
-            option.value = `${formattedHour}:00`;
-            option.textContent = `${formattedHour}:00`;
-            selectElement.appendChild(option);
-        }
-    }
-
-    function showSavedItems(items, title) {
-        document.getElementById('savedItemsTitle').textContent = `Saved ${title}`;
-        savedItemsList.innerHTML = '';
-        if (items.length === 0) {
-            savedItemsList.innerHTML = '<p class="text-center text-gray-500">No saved items.</p>';
-        } else {
-            items.forEach(item => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'bg-gray-100 p-3 rounded-md flex justify-between items-center';
-                const displayText = item.date + (item.time ? ` @ ${item.time}` : '') + `: ${item.type || item.taskType}` + (item.details ? ` (${item.details})` : '');
-                itemEl.innerHTML = `<span class="flex-1">${displayText}</span>`;
-
-                const actionsEl = document.createElement('div');
-
-                const editBtn = document.createElement('button');
-                editBtn.className = 'text-blue-500 hover:text-blue-700 mr-2';
-                editBtn.innerHTML = '✏️';
-                editBtn.onclick = () => editItem(item.id, title.toLowerCase().slice(0, -1));
-                actionsEl.appendChild(editBtn);
-
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'text-red-500 hover:text-red-700';
-                deleteBtn.innerHTML = '🗑️';
-                deleteBtn.onclick = () => deleteItem(item.id, title.toLowerCase().slice(0, -1));
-                actionsEl.appendChild(deleteBtn);
-
-                itemEl.appendChild(actionsEl);
-                savedItemsList.appendChild(itemEl);
-            });
-        }
-        savedItemsModal.classList.remove('hidden');
-    }
-
-    document.getElementById('closeEventModal').addEventListener('click', () => eventModal.classList.add('hidden'));
-    document.getElementById('closeTaskModal').addEventListener('click', () => taskModal.classList.add('hidden'));
-    document.getElementById('closeSavedItemsModal').addEventListener('click', () => savedItemsModal.classList.add('hidden'));
-    document.getElementById('closeBlockModal').addEventListener('click', () => blockModal.classList.add('hidden'));
-    document.getElementById('closeUnblockModal').addEventListener('click', () => unblockModal.classList.add('hidden'));
-
-    eventTypeEl.addEventListener('change', (e) => {
-        otherEventContainer.classList.toggle('hidden', e.target.value !== 'other');
-    });
-
-    taskTypeEl.addEventListener('change', (e) => {
-        otherTaskContainer.classList.toggle('hidden', e.target.value !== 'other');
-    });
-
-    document.getElementById('saveEventBtn').addEventListener('click', () => {
-        if (!selectedDate) return alert('Please select a date on the calendar first.');
-        const eventType = eventTypeEl.value;
-        const eventTime = eventTimeEl.value;
-        const details = eventType === 'other' ? document.getElementById('otherEvent').value.trim() : '';
-
-        if (eventType === 'other' && !details) {
-            return alert('Please describe the event.');
-        }
-
-        const newEvent = {
-            id: Date.now(),
-            date: selectedDate,
-            time: eventTime,
-            type: eventType,
-            details: details
-        };
-        savedEvents.push(newEvent);
-        localStorage.setItem('savedEvents', JSON.stringify(savedEvents));
-        alert('Event saved!');
-        eventModal.classList.add('hidden');
-        generateCalendar(currentMonth, currentYear);
-    });
-
-    document.getElementById('saveTaskBtn').addEventListener('click', () => {
-        if (!selectedDate) return alert('Please select a date on the calendar first.');
-        const taskType = taskTypeEl.value;
-        const details = taskType === 'other' ? document.getElementById('otherTask').value.trim() : '';
-        const taskTime = document.getElementById('eventTime').value;
-
-        if (taskType === 'other' && !details) {
-            return alert('Please describe the task.');
-        }
-
-        const newTask = {
-            id: Date.now(),
-            date: selectedDate,
-            taskType: taskType,
-            details: details
-        };
-        savedTasks.push(newTask);
-        localStorage.setItem('savedTasks', JSON.stringify(savedTasks));
-        alert('Task saved!');
-        taskModal.classList.add('hidden');
-        generateCalendar(currentMonth, currentYear);
-    });
-
-    prevMonthBtn.addEventListener('click', () => {
-        currentMonth--;
-        if (currentMonth < 0) {
-            currentMonth = 11;
-            currentYear--;
-        }
-        generateCalendar(currentMonth, currentYear);
-    });
-
-    nextMonthBtn.addEventListener('click', () => {
-        currentMonth++;
-        if (currentMonth > 11) {
-            currentMonth = 0;
-            currentYear++;
-        }
-        generateCalendar(currentMonth, currentYear);
-    });
-
-    viewEventsBtn.addEventListener('click', () => {
-        showSavedItems(savedEvents, 'Events');
-    });
-
-    viewTasksBtn.addEventListener('click', () => {
-        showSavedItems(savedTasks, 'Tasks');
-    });
-
-    blockBtn.addEventListener('click', () => {
-        blockModal.classList.remove('hidden');
-        generateTimeOptions(blockStartTimeEl, 5, 23);
-        generateTimeOptions(blockEndTimeEl, 5, 23);
-    });
-
-    unblockBtn.addEventListener('click', () => {
-        unblockModal.classList.remove('hidden');
-        const blockedDayOptions = blockedTimes.filter(b => b.time === 'full-day');
-        unblockTimesList.innerHTML = '';
-        if (blockedDayOptions.length === 0) {
-            unblockTimesList.innerHTML = '<p class="text-center text-gray-500">No blocked full days.</p>';
-        } else {
-            blockedDayOptions.forEach(block => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'bg-gray-100 p-3 rounded-md flex justify-between items-center';
-                itemEl.innerHTML = `<span class="flex-1">${block.date}</span>`;
-                const unblockButton = document.createElement('button');
-                unblockButton.className = 'text-red-500 hover:text-red-700';
-                unblockButton.innerHTML = '🗑️';
-                unblockButton.onclick = () => deleteBlockedTime(block.id);
-                itemEl.appendChild(unblockButton);
-                unblockTimesList.appendChild(itemEl);
-            });
-        }
-    });
-
-    blockFullDayBtn.addEventListener('click', () => {
-        const date = blockDateSelector.value;
-        if (!date) return alert('Please select a date.');
-        
-        const newBlock = {
-            id: Date.now(),
-            date: date,
-            time: 'full-day'
-        };
-        blockedTimes.push(newBlock);
-        localStorage.setItem('blockedTimes', JSON.stringify(blockedTimes));
-        alert('Full day blocked successfully!');
-        blockModal.classList.add('hidden');
-        generateCalendar(currentMonth, currentYear);
-    });
-
-    document.getElementById('saveBlockBtn').addEventListener('click', () => {
-        const date = blockDateSelector.value;
-        const startTime = blockStartTimeEl.value;
-        const endTime = blockEndTimeEl.value;
-
-        if (!date || !startTime || !endTime) {
-            return alert('Please select a date, start time, and end time.');
-        }
-
-        const newBlock = {
-            id: Date.now(),
-            date: date,
-            startTime: startTime,
-            endTime: endTime
-        };
-        blockedTimes.push(newBlock);
-        localStorage.setItem('blockedTimes', JSON.stringify(blockedTimes));
-        alert('Time blocked successfully!');
-        blockModal.classList.add('hidden');
-        generateCalendar(currentMonth, currentYear);
-    });
-
-    function deleteBlockedTime(id) {
-        blockedTimes = blockedTimes.filter(b => b.id !== id);
-        localStorage.setItem('blockedTimes', JSON.stringify(blockedTimes));
-        unblockBtn.click(); // Refresh the list
-        generateCalendar(currentMonth, currentYear);
-        alert('Blocked time removed.');
-    }
-
-    window.deleteItem = function(id, type) {
-        if (type === 'event') {
-            savedEvents = savedEvents.filter(e => e.id !== id);
-            localStorage.setItem('savedEvents', JSON.stringify(savedEvents));
-            showSavedItems(savedEvents, 'Events');
-        } else if (type === 'task') {
-            savedTasks = savedTasks.filter(t => t.id !== id);
-            localStorage.setItem('savedTasks', JSON.stringify(savedTasks));
-            showSavedItems(savedTasks, 'Tasks');
-        }
-        generateCalendar(currentMonth, currentYear);
-    };
-
-    window.editItem = function(id, type) {
-        alert(`The changes have been saved.`);
-    };
-
-    // --- NEW NOTIFICATION CODE STARTS HERE ---
-
-    // Function to show the animated bell
-    function showBellNotification() {
-        bellEmojiEl.classList.remove('hidden');
-        bellEmojiEl.classList.add('bell-ring-animation');
-        bellSound.play();
-        setTimeout(() => {
-            bellEmojiEl.classList.remove('bell-ring-animation');
-            bellEmojiEl.classList.add('hidden');
-        }, 3000); // Hide after 3 seconds
-    }
-
-    // Main notification check function
-    function checkNotifications() {
-        const now = new Date();
-
-        savedTasks.forEach(task => {
-            if (!task.date) return;
-            const taskDateTimeStr = `${task.date}T${task.time || '00:00'}:00`;
-            const taskDate = new Date(taskDateTimeStr);
-            
-            if (isNaN(taskDate.getTime())) {
-                console.error('Invalid task date:', task);
-                return;
-            }
-
-            const timeUntilTask = taskDate.getTime() - now.getTime();
-            const hoursUntilTask = timeUntilTask / (1000 * 60 * 60);
-
-            // 12-hour notification
-            if (hoursUntilTask <= 12 && hoursUntilTask > 11 && !notifiedTasks[`${task.id}-12h`]) {
-                const message = `🔔 Reminder: You have a task in 12 hours - ${task.taskType}.`;
-                alert(message);
-                showBellNotification();
-                notifiedTasks[`${task.id}-12h`] = true;
-                localStorage.setItem('notifiedTasks', JSON.stringify(notifiedTasks));
-            }
-
-            // 2-hour notification
-            if (hoursUntilTask <= 2 && hoursUntilTask > 1 && !notifiedTasks[`${task.id}-2h`]) {
-                const message = `🔔 Reminder: You have a task in 2 hours - ${task.taskType}.`;
-                alert(message);
-                showBellNotification();
-                notifiedTasks[`${task.id}-2h`] = true;
-                localStorage.setItem('notifiedTasks', JSON.stringify(notifiedTasks));
-            }
-        });
-    }
-
-    // Check for notifications every minute
-    setInterval(checkNotifications, 60000);
-
-    // Initial check on page load
-    checkNotifications();
-
-    // --- NEW NOTIFICATION CODE ENDS HERE ---
-
-    generateCalendar(currentMonth, currentYear);
-    generateTimeOptions(eventTimeEl, 5, 23);
-</script>
 </body>
 </html>
