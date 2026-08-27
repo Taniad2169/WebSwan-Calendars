@@ -69,6 +69,24 @@
       transform: translateY(-50%);
     }
 
+    .admin-login-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .admin-login-btn:hover {
+      background-color: #218838;
+    }
+
     .calendar-grid {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
@@ -298,6 +316,7 @@
   <header class="main-header">
     <h1 id="site-title">The Web Swan Calendar</h1>
     <span id="bell-emoji" class="bell-animated" style="left: 50%; display: none;">🔔</span>
+    <button id="adminBtn" class="admin-login-btn">Admin</button>
   </header>
   
   <div class="nav-buttons">
@@ -379,6 +398,17 @@
     </div>
   </div>
 
+  <div id="adminLoginModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>Admin Login</h2>
+        <div id="adminErrorMsg" style="color: red; margin-bottom: 10px; display: none;"></div>
+        <label for="adminPassword">Password:</label>
+        <input type="password" id="adminPassword" placeholder="Enter admin password" required>
+        <button id="adminLoginBtn">Login</button>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -402,6 +432,13 @@
     const taskInput = document.getElementById('taskInput');
     const taskModal = document.getElementById('taskModal');
     const blockedDaysList = document.getElementById('blockedDaysList');
+    
+    // Admin login elements
+    const adminBtn = document.getElementById('adminBtn');
+    const adminLoginModal = document.getElementById('adminLoginModal');
+    const adminPassword = document.getElementById('adminPassword');
+    const adminLoginBtn = document.getElementById('adminLoginBtn');
+    const adminErrorMsg = document.getElementById('adminErrorMsg');
 
     let appointments = JSON.parse(localStorage.getItem('appointments')) || [];
     let blockedDays = JSON.parse(localStorage.getItem('blockedDays')) || [];
@@ -546,9 +583,48 @@
         this.reset();
     });
 
+    // Admin login functionality
+    adminBtn.addEventListener('click', () => {
+        adminLoginModal.classList.add('show');
+        adminPassword.focus();
+    });
+
+    adminLoginBtn.addEventListener('click', () => {
+        const password = adminPassword.value;
+        if (password === 'adminpass') {
+            // Correct password - redirect to index1.html
+            window.location.href = 'index1.html';
+        } else {
+            // Incorrect password - show error
+            adminErrorMsg.textContent = 'Incorrect password. Please try again.';
+            adminErrorMsg.style.display = 'block';
+            adminPassword.value = '';
+            adminPassword.focus();
+        }
+    });
+
+    // Allow Enter key to submit admin login
+    adminPassword.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            adminLoginBtn.click();
+        }
+    });
+
     Array.from(document.querySelectorAll('.modal')).forEach(function(modal) {
         modal.addEventListener('click', function(e) {
             if (e.target === modal) modal.classList.remove("show");
+        });
+    });
+
+    // Close button functionality for all modals
+    Array.from(document.querySelectorAll('.close-btn')).forEach(function(closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            this.closest('.modal').classList.remove('show');
+            // Clear admin error message when closing
+            if (this.closest('#adminLoginModal')) {
+                adminErrorMsg.style.display = 'none';
+                adminPassword.value = '';
+            }
         });
     });
 
@@ -560,6 +636,10 @@
             document.getElementById('taskModal').classList.remove("show");
             document.getElementById('contactModal').classList.remove("show");
             document.getElementById('blockedDaysModal').classList.remove("show");
+            document.getElementById('adminLoginModal').classList.remove("show");
+            // Clear admin error message when closing with escape
+            adminErrorMsg.style.display = 'none';
+            adminPassword.value = '';
         }
     });
 
