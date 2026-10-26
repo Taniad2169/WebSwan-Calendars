@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebSwan Calendar</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦢</text></svg>">
+<style>
+:root{--navy:#0d2745;--blue:#3898f5;--blue-d:#1f6fa3;--grad:linear-gradient(120deg,#3898f5 0%,#6aa8e6 50%,#48d6fa 100%);--bg:#f3f7fb;--card:#fff;--line:#dbe5ef;--text:#14263b;--muted:#5d7187;--green:#15803d;--amber:#b45309;--red:#b42318;--chip:#e8f3fc}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:16px}
+header{background:var(--grad);color:#fff;border-radius:16px;padding:16px 18px;display:grid;grid-template-columns:auto 1fr auto;gap:10px 14px;align-items:center;box-shadow:0 6px 18px rgba(56,152,245,.25)}
+header .logo{height:64px;width:auto;background:#fff;border-radius:14px;padding:4px 8px;box-shadow:0 2px 8px rgba(13,39,69,.2)}
+header .me{width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 2px 8px rgba(13,39,69,.3)}
+header .mid{text-align:center}
+header h1{margin:0;font-size:24px;letter-spacing:.2px;text-shadow:0 1px 3px rgba(13,39,69,.45)}
+header h1 small{display:block;font-size:12.5px;font-weight:500;margin-top:3px}
+.hbtns{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.hbtns a,.hbtns button{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;border:0;background:rgba(255,255,255,.92);color:var(--navy);text-decoration:none;font-size:14px;font-weight:600;cursor:pointer}
+.hbtns a:hover,.hbtns button:hover{background:#fff}
+#connectBtn{background:var(--navy);color:#fff}
+@media (max-width:560px){header{grid-template-columns:auto 1fr auto}header .logo{height:42px}header .me{width:46px;height:46px}header h1{font-size:19px}header h1 small{font-size:11px}}
+#connectBtn.on{background:#d1fae5;color:#065f46;border-color:#d1fae5}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:14px 0}
+.toggle{display:inline-flex;background:#e2ebf4;border-radius:999px;padding:4px}
+.toggle button{border:0;background:transparent;padding:9px 18px;border-radius:999px;cursor:pointer;font-weight:600;color:var(--muted)}
+.toggle button[aria-pressed="true"]{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.status{font-size:13px;color:var(--muted)}
+.status b{color:var(--text)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+.mnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mnav h2{margin:0;font-size:18px}
+.mnav button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;cursor:pointer}
+.wd,.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.wd span{font-size:12px;text-align:center;color:var(--muted);font-weight:600;padding:4px 0}
+.day{min-height:76px;border:1px solid var(--line);border-radius:8px;padding:4px;background:#fff;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.day.other{background:#f7f9fb;color:#a3b1bf}
+.day.today{border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
+.day.today .n{background:var(--grad);color:#fff;border-radius:999px;padding:0 6px;align-self:flex-start}
+.day.sel{background:var(--chip)}
+.day .n{font-size:13px;font-weight:700}
+.ev{font-size:11px;line-height:1.25;background:#dbeafe;color:#1e3a8a;border-radius:4px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev.local{background:#fef3c7;color:#92400e}
+.ev.task{background:#dcfce7;color:#166534}
+.more{font-size:11px;color:var(--muted)}
+@media (max-width:560px){.day{min-height:54px}.ev{display:none}.day .dots{display:flex;gap:2px;flex-wrap:wrap}.dot{width:6px;height:6px;border-radius:50%;background:#2563eb}.dot.local{background:#d97706}.dot.task{background:#16a34a}}
+@media (min-width:561px){.dots{display:none}}
+h3{margin:0 0 10px;font-size:16px}
+.list{list-style:none;margin:0;padding:0}
+.list li{border-top:1px solid var(--line);padding:9px 0;display:flex;gap:10px;align-items:flex-start}
+.list li:first-child{border-top:0}
+.list .t{font-weight:600}
+.list .sub{font-size:13px;color:var(--muted)}
+.tag{font-size:11px;border-radius:999px;padding:2px 8px;background:#fef3c7;color:#92400e;white-space:nowrap}
+.tag.g{background:#dbeafe;color:#1e3a8a}
+form .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){form .row{grid-template-columns:1fr}}
+label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px;color:#34495e}
+input,select,textarea{width:100%;border:1px solid #c9d6e3;border-radius:8px;padding:9px 10px;background:#fff;color:var(--text)}
+textarea{min-height:70px;resize:vertical}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:700;background:var(--grad);color:#fff;text-shadow:0 1px 2px rgba(13,39,69,.45)}
+.btn.sec{background:#e2ebf4;color:var(--navy);text-shadow:none}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn:disabled{opacity:.6;cursor:default}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.empty{color:var(--muted);font-size:14px;padding:6px 0}
+.task-row input[type=checkbox]{width:20px;height:20px;margin-top:2px;flex:none;accent-color:var(--green)}
+.task-row.done .t{text-decoration:line-through;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:92vw;display:none;z-index:50}
+.toast.show{display:block}
+.help{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.5}
+[hidden]{display:none!important}
+a.lnk{color:var(--blue-d)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img class="logo" src="webswan-logo.png" alt="The WebSwan logo">
+    <div class="mid"><h1>WebSwan Calendar<small>Calls, appointments &amp; tasks · saves to Google for thewebswann@gmail.com</small></h1></div>
+    <img class="me" src="tania.jpg" alt="Tania Domingue">
+    <div class="hbtns">
+      <a href="https://calendar.google.com/calendar/u/0/r?authuser=thewebswann@gmail.com" target="_blank" rel="noopener">📅 Open Google Calendar</a>
+      <a href="https://tasks.google.com/tasks/?authuser=thewebswann@gmail.com" target="_blank" rel="noopener">✅ Open Google Tasks</a>
+      <a href="https://taniad2169.github.io/Daily-task/" rel="noopener">🚀 WorkPilot</a>
+      <button id="connectBtn" type="button">🔗 Connect Google</button>
+    </div>
+  </header>
+
+  <div class="bar">
+    <div class="toggle" role="group" aria-label="Switch view">
+      <button type="button" id="tabCal" aria-pressed="true">📅 Calendar</button>
+      <button type="button" id="tabTask" aria-pressed="false">✅ Tasks</button>
+    </div>
+    <div class="status" id="status">Not connected. Things you add are kept on this device until you connect Google.</div>
+  </div>
+
+  <!-- CALENDAR VIEW -->
+  <section id="viewCal" class="grid2">
+    <div class="card">
+      <div class="mnav">
+        <button type="button" id="prevM" aria-label="Previous month">‹</button>
+        <h2 id="monthTitle"></h2>
+        <button type="button" id="nextM" aria-label="Next month">›</button>
+      </div>
+      <div class="wd"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+      <div class="days" id="days"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <h3 id="dayTitle">Today</h3>
+        <ul class="list" id="dayList"></ul>
+      </div>
+      <div class="card">
+        <h3>➕ Add a call or appointment</h3>
+        <form id="evForm" autocomplete="off">
+          <label for="evTitle">Who / what</label>
+          <input id="evTitle" required placeholder="e.g. Call Dr. Smith, Smith Chiropractic">
+          <div class="row">
+            <div><label for="evType">Type</label>
+              <select id="evType"><option>Call</option><option>Appointment</option><option>Meeting</option><option>Follow-up</option><option>Personal</option></select></div>
+            <div><label for="evPhone">Phone (optional)</label><input id="evPhone" type="tel" placeholder="(555) 123-4567"></div>
+          </div>
+          <div class="row">
+            <div><label for="evDate">Date</label><input id="evDate" type="date" required></div>
+            <div><label for="evTime">Start time</label><input id="evTime" type="time" required value="10:00" step="900"></div>
+          </div>
+          <div class="row">
+            <div><label for="evDur">Length</label>
+              <select id="evDur"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">1 hour</option><option value="90">1½ hours</option><option value="120">2 hours</option></select></div>
+            <div><label for="evRemind">Reminder</label>
+              <select id="evRemind"><option value="10">10 min before</option><option value="30" selected>30 min before</option><option value="60">1 hour before</option><option value="1440">1 day before</option></select></div>
+          </div>
+          <label for="evNotes">Notes (optional)</label>
+          <textarea id="evNotes" placeholder="What the call is about, links, etc."></textarea>
+          <div class="actions"><button class="btn" type="submit" id="evSave">Save to Google Calendar</button></div>
+          <p class="help" id="evHelp"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- TASKS VIEW -->
+  <section id="viewTask" class="grid2" hidden>
+    <div class="card">
+      <h3>✅ My tasks</h3>
+      <ul class="list" id="taskList"></ul>
+      <div class="actions"><button class="btn sec sm" type="button" id="showDone">Show completed</button></div>
+    </div>
+    <div class="card">
+      <h3>➕ Add a task</h3>
+      <form id="tkForm" autocomplete="off">
+        <label for="tkTitle">Task</label>
+        <input id="tkTitle" required placeholder="e.g. Send George his new payment link">
+        <label for="tkDue">Due date (optional)</label>
+        <input id="tkDue" type="date">
+        <label for="tkNotes">Notes (optional)</label>
+        <textarea id="tkNotes"></textarea>
+        <div class="actions"><button class="btn" type="submit" id="tkSave">Save to Google Tasks</button></div>
+        <p class="help" id="tkHelp"></p>
+      </form>
+    </div>
+  </section>
+
+  <p class="help" style="text-align:center;margin-top:18px">Yellow items are saved only on this device and haven't reached Google yet. Connect Google and they're sent automatically.</p>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+/* Google sign-in uses the same Firebase project WorkPilot uses for "Sign in to Sync".
+   Loaded only when you tap Connect, so the page always works even offline. */
+const FB = "https://www.gstatic.com/firebasejs/12.14.0/";
+let fb = null;
+async function firebase() {
+  if (fb) return fb;
+  const [{ initializeApp }, A] = await Promise.all([import(FB + "firebase-app.js"), import(FB + "firebase-auth.js")]);
+  const app = initializeApp({ apiKey: "AIzaSyBxuPZnF8rSZPkmoeqNR_9PQtFUJNKU3JM", authDomain: "webswan-gigoia-task.firebaseapp.com", projectId: "webswan-gigoia-task" }, "webswan-calendar");
+  const provider = new A.GoogleAuthProvider();
+  provider.addScope("https://www.googleapis.com/auth/calendar.events");
+  provider.addScope("https://www.googleapis.com/auth/tasks");
+  provider.setCustomParameters({ login_hint: "thewebswann@gmail.com", prompt: "consent select_account" });
+  fb = { auth: A.getAuth(app), provider, A };
+  return fb;
+}
+
+const TZ = "America/Los_Angeles";
+const CAL = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
+const TASKS = "https://tasks.googleapis.com/tasks/v1/lists/@default/tasks";
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2, "0");
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+/* ---------- storage (safe) ---------- */
+const store = {
+  get(k, f) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch { return f; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const sget = k => { try { return JSON.parse(sessionStorage.getItem(k)); } catch { return null; } };
+const sset = (k, v) => { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch {} };
+
+let pendingEvents = store.get("wsc_pendingEvents", []);   // not yet in Google
+let pendingTasks = store.get("wsc_pendingTasks", []);
+let token = sget("wsc_token");                           // {value, exp, email}
+let gEvents = [];      // Google events for visible range
+let gTasks = [];
+let showCompleted = false;
+let view = new Date(); view.setDate(1);
+let selected = ymd(new Date());
+
+function toast(msg, ms = 3500) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), ms); }
+const connected = () => token && token.value && token.exp > Date.now() + 60000;
+
+function paintStatus() {
+  const b = $("connectBtn");
+  if (connected()) {
+    b.textContent = "✓ Google connected"; b.classList.add("on");
+    const mins = Math.max(1, Math.round((token.exp - Date.now()) / 60000));
+    $("status").innerHTML = `Connected as <b>${esc(token.email || "Google")}</b>. Everything you add goes straight to Google. (Reconnect in ~${mins} min.)`;
+    $("evHelp").textContent = ""; $("tkHelp").textContent = "";
+  } else {
+    b.textContent = token ? "🔄 Reconnect Google" : "🔗 Connect Google"; b.classList.remove("on");
+    $("status").textContent = token ? "Google connection timed out (Google asks again every hour). Tap Reconnect Google." : "Not connected. Things you add are kept on this device until you connect Google.";
+    $("evHelp").textContent = "Not connected: it will be saved here, and Google Calendar opens with the event filled in so you can press Save.";
+    $("tkHelp").textContent = "Not connected: it will be saved here and sent to Google Tasks as soon as you connect.";
+  }
+}
+
+async function connect() {
+  try {
+    const { auth, provider, A } = await firebase();
+    const res = await A.signInWithPopup(auth, provider);
+    const cred = A.GoogleAuthProvider.credentialFromResult(res);
+    if (!cred || !cred.accessToken) throw new Error("No Google access was granted.");
+    token = { value: cred.accessToken, exp: Date.now() + 55 * 60000, email: res.user && res.user.email };
+    sset("wsc_token", token);
+    if (token.email && token.email.toLowerCase() !== "thewebswann@gmail.com") toast(`Heads up: connected as ${token.email}, not thewebswann@gmail.com.`, 6000);
+    paintStatus();
+    await flushPending();
+    await refreshAll();
+  } catch (e) {
+    console.error(e);
+    toast(e && e.code === "auth/popup-blocked" ? "Your browser blocked the Google pop-up. Allow pop-ups for this page and try again." : "Couldn't connect to Google: " + (e.message || e), 6000);
+  }
+}
+
+async function api(url, opts = {}) {
+  if (!connected()) throw new Error("not-connected");
+  const r = await fetch(url, { ...opts, headers: { "Authorization": "Bearer " + token.value, "Content-Type": "application/json", ...(opts.headers || {}) } });
+  if (r.status === 401) { token.exp = 0; sset("wsc_token", token); paintStatus(); throw new Error("not-connected"); }
+  if (!r.ok) {
+    let msg = r.status + "";
+    try { const j = await r.json(); msg = (j.error && (j.error.message || j.error.status)) || msg; } catch {}
+    if (/has not been used|is disabled|accessNotConfigured/i.test(msg)) msg = "Google Calendar/Tasks access isn't switched on for this app yet. Ask Claude to finish the Google setup.";
+    throw new Error(msg);
+  }
+  return r.status === 204 ? null : r.json();
+}
+
+/* ---------- events ---------- */
+function eventBody(e) {
+  const [h, m] = e.time.split(":").map(Number);
+  const start = new Date(`${e.date}T${e.time}:00`);
+  const end = new Date(start.getTime() + e.duration * 60000);
+  const fmt = d => `${ymd(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+  const desc = [e.phone ? `📞 ${e.phone}` : "", e.notes || "", "Added from WebSwan Calendar"].filter(Boolean).join("\n\n");
+  return {
+    summary: `${e.type === "Call" && !/^call\b/i.test(e.title) ? "Call: " : e.type !== "Call" ? e.type + ": " : ""}${e.title}`,
+    description: desc,
+    start: { dateTime: fmt(start), timeZone: TZ },
+    end: { dateTime: fmt(end), timeZone: TZ },
+    reminders: { useDefault: false, overrides: [{ method: "popup", minutes: Number(e.remind) || 30 }] }
+  };
+}
+function templateLink(e) {
+  const b = eventBody(e);
+  const z = s => s.replace(/[-:]/g, "");
+  const u = new URL("https://calendar.google.com/calendar/render");
+  u.searchParams.set("action", "TEMPLATE");
+  u.searchParams.set("text", b.summary);
+  u.searchParams.set("dates", `${z(b.start.dateTime)}/${z(b.end.dateTime)}`);
+  u.searchParams.set("ctz", TZ);
+  u.searchParams.set("details", b.description);
+  u.searchParams.set("authuser", "thewebswann@gmail.com");
+  return u.toString();
+}
+
+async function loadEvents() {
+  if (!connected()) { gEvents = []; return; }
+  const from = new Date(view.getFullYear(), view.getMonth(), 1 - 7);
+  const to = new Date(view.getFullYear(), view.getMonth() + 1, 7);
+  const q = new URLSearchParams({ timeMin: from.toISOString(), timeMax: to.toISOString(), singleEvents: "true", orderBy: "startTime", maxResults: "250" });
+  const j = await api(`${CAL}?${q}`);
+  gEvents = (j.items || []).filter(x => x.status !== "cancelled").map(x => {
+    const allDay = !!(x.start && x.start.date);
+    const s = allDay ? new Date(x.start.date + "T00:00:00") : new Date(x.start.dateTime);
+    return { title: x.summary || "(no title)", date: allDay ? x.start.date : ymd(s), time: allDay ? "" : `${pad(s.getHours())}:${pad(s.getMinutes())}`, allDay, link: x.htmlLink, src: "g", desc: x.description || "" };
+  });
+}
+
+/* ---------- tasks ---------- */
+async function loadTasks() {
+  if (!connected()) { gTasks = []; return; }
+  const q = new URLSearchParams({ showCompleted: "true", showHidden: "true", maxResults: "100" });
+  const j = await api(`${TASKS}?${q}`);
+  gTasks = (j.items || []).filter(t => t.title).map(t => ({ id: t.id, title: t.title, notes: t.notes || "", due: t.due ? t.due.slice(0, 10) : "", done: t.status === "completed", src: "g" }));
+}
+function taskBody(t) { const b = { title: t.title }; if (t.notes) b.notes = t.notes; if (t.due) b.due = `${t.due}T00:00:00.000Z`; return b; }
+
+async function flushPending() {
+  if (!connected()) return;
+  let sentE = 0, sentT = 0;
+  for (const e of [...pendingEvents]) {
+    try { await api(CAL, { method: "POST", body: JSON.stringify(eventBody(e)) }); pendingEvents = pendingEvents.filter(x => x.id !== e.id); sentE++; }
+    catch (err) { toast(err.message === "not-connected" ? "Reconnect Google to finish syncing." : "Calendar: " + err.message, 6000); break; }
+  }
+  for (const t of [...pendingTasks]) {
+    try { await api(TASKS, { method: "POST", body: JSON.stringify(taskBody(t)) }); pendingTasks = pendingTasks.filter(x => x.id !== t.id); sentT++; }
+    catch (err) { toast(err.message === "not-connected" ? "Reconnect Google to finish syncing." : "Tasks: " + err.message, 6000); break; }
+  }
+  store.set("wsc_pendingEvents", pendingEvents); store.set("wsc_pendingTasks", pendingTasks);
+  if (sentE || sentT) toast(`Sent to Google: ${sentE} event${sentE === 1 ? "" : "s"}, ${sentT} task${sentT === 1 ? "" : "s"}.`);
+}
+
+async function refreshAll() {
+  try { await Promise.all([loadEvents(), loadTasks()]); }
+  catch (e) { if (e.message !== "not-connected") toast(e.message, 7000); }
+  renderMonth(); renderDay(); renderTasks();
+}
+
+/* ---------- rendering ---------- */
+function itemsOn(date) {
+  const ev = gEvents.filter(e => e.date === date).map(e => ({ ...e, kind: "ev" }));
+  const pe = pendingEvents.filter(e => e.date === date).map(e => ({ title: eventBody(e).summary, time: e.time, src: "local", kind: "ev", phone: e.phone }));
+  const tk = [...gTasks.filter(t => !t.done), ...pendingTasks.map(t => ({ ...t, src: "local" }))].filter(t => t.due === date).map(t => ({ title: "✅ " + t.title, src: t.src, kind: "task" }));
+  return [...ev, ...pe].sort((a, b) => (a.time || "").localeCompare(b.time || "")).concat(tk);
+}
+function fmtTime(t) { if (!t) return "All day"; const [h, m] = t.split(":").map(Number); return `${((h + 11) % 12) + 1}:${pad(m)} ${h < 12 ? "AM" : "PM"}`; }
+
+function renderMonth() {
+  $("monthTitle").textContent = view.toLocaleString("en-US", { month: "long", year: "numeric" });
+  const first = new Date(view.getFullYear(), view.getMonth(), 1);
+  const start = new Date(first); start.setDate(1 - first.getDay());
+  const today = ymd(new Date());
+  const out = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    const key = ymd(d);
+    const items = itemsOn(key);
+    const cls = ["day", d.getMonth() !== view.getMonth() ? "other" : "", key === today ? "today" : "", key === selected ? "sel" : ""].join(" ");
+    const evs = items.slice(0, 3).map(it => `<div class="ev ${it.kind === "task" ? "task" : it.src === "local" ? "local" : ""}">${esc(it.time ? fmtTime(it.time).replace(":00", "") + " " : "")}${esc(it.title)}</div>`).join("");
+    const dots = items.slice(0, 6).map(it => `<i class="dot ${it.kind === "task" ? "task" : it.src === "local" ? "local" : ""}"></i>`).join("");
+    out.push(`<button type="button" class="${cls}" data-d="${key}" aria-label="${d.toDateString()}, ${items.length} item${items.length === 1 ? "" : "s"}"><span class="n">${d.getDate()}</span>${evs}${items.length > 3 ? `<span class="more">+${items.length - 3} more</span>` : ""}<span class="dots">${dots}</span></button>`);
+  }
+  $("days").innerHTML = out.join("");
+}
+
+function renderDay() {
+  const d = new Date(selected + "T12:00:00");
+  $("dayTitle").textContent = selected === ymd(new Date()) ? "Today · " + d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }) : d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const items = itemsOn(selected);
+  $("dayList").innerHTML = items.length ? items.map(it => `<li><div style="min-width:70px" class="sub">${it.kind === "task" ? "Task" : esc(fmtTime(it.time))}</div><div style="flex:1"><div class="t">${it.link ? `<a class="lnk" href="${esc(it.link)}" target="_blank" rel="noopener">${esc(it.title)}</a>` : esc(it.title)}</div>${it.phone ? `<div class="sub">📞 <a class="lnk" href="tel:${esc(it.phone)}">${esc(it.phone)}</a></div>` : ""}</div>${it.src === "local" ? '<span class="tag">Not in Google yet</span>' : '<span class="tag g">Google</span>'}</li>`).join("")
+    : `<li class="empty">Nothing scheduled${connected() ? "" : " here yet (connect Google to see your Google Calendar too)"}.</li>`;
+  $("evDate").value = selected;
+}
+
+function renderTasks() {
+  const all = [...pendingTasks.map(t => ({ ...t, src: "local" })), ...gTasks];
+  const list = all.filter(t => showCompleted || !t.done).sort((a, b) => (a.done - b.done) || ((a.due || "9999") .localeCompare(b.due || "9999")));
+  $("showDone").textContent = showCompleted ? "Hide completed" : "Show completed";
+  $("taskList").innerHTML = list.length ? list.map(t => `<li class="task-row ${t.done ? "done" : ""}">${t.src === "g" ? `<input type="checkbox" data-id="${esc(t.id)}" ${t.done ? "checked" : ""} aria-label="Mark ${esc(t.title)} done">` : '<span style="width:20px"></span>'}<div style="flex:1"><div class="t">${esc(t.title)}</div>${t.due ? `<div class="sub">Due ${new Date(t.due + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}</div>` : ""}${t.notes ? `<div class="sub">${esc(t.notes)}</div>` : ""}</div>${t.src === "local" ? '<span class="tag">Not in Google yet</span>' : ""}</li>`).join("")
+    : `<li class="empty">${connected() ? "No open tasks. 🎉" : "No tasks here yet. Connect Google to see your Google Tasks."}</li>`;
+}
+
+/* ---------- actions ---------- */
+$("evForm").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const e = { id: "e" + Date.now(), title: $("evTitle").value.trim(), type: $("evType").value, phone: $("evPhone").value.trim(), date: $("evDate").value, time: $("evTime").value, duration: Number($("evDur").value), remind: $("evRemind").value, notes: $("evNotes").value.trim() };
+  if (!e.title || !e.date || !e.time) return;
+  const btn = $("evSave"); btn.disabled = true;
+  try {
+    if (connected()) {
+      await api(CAL, { method: "POST", body: JSON.stringify(eventBody(e)) });
+      toast("Saved to your Google Calendar ✓");
+    } else {
+      pendingEvents.push(e); store.set("wsc_pendingEvents", pendingEvents);
+      window.open(templateLink(e), "_blank", "noopener");
+      toast("Saved here. Google Calendar opened with it filled in. Press Save there.", 6000);
+    }
+    $("evForm").reset(); $("evTime").value = "10:00"; $("evDur").value = "30"; $("evRemind").value = "30";
+    selected = e.date; const d = new Date(e.date + "T12:00:00"); view = new Date(d.getFullYear(), d.getMonth(), 1);
+    await refreshAll();
+  } catch (err) {
+    if (err.message === "not-connected") { pendingEvents.push(e); store.set("wsc_pendingEvents", pendingEvents); toast("Google connection timed out. Saved here; tap Reconnect Google to send it.", 6000); renderMonth(); renderDay(); }
+    else toast("Couldn't save to Google: " + err.message, 7000);
+  } finally { btn.disabled = false; }
+});
+
+$("tkForm").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const t = { id: "t" + Date.now(), title: $("tkTitle").value.trim(), due: $("tkDue").value, notes: $("tkNotes").value.trim() };
+  if (!t.title) return;
+  const btn = $("tkSave"); btn.disabled = true;
+  try {
+    if (connected()) { await api(TASKS, { method: "POST", body: JSON.stringify(taskBody(t)) }); toast("Saved to your Google Tasks ✓"); }
+    else { pendingTasks.push(t); store.set("wsc_pendingTasks", pendingTasks); toast("Saved here. It goes to Google Tasks when you connect Google.", 5000); }
+    $("tkForm").reset();
+    await refreshAll();
+  } catch (err) {
+    if (err.message === "not-connected") { pendingTasks.push(t); store.set("wsc_pendingTasks", pendingTasks); toast("Google connection timed out. Saved here; tap Reconnect Google to send it.", 6000); renderTasks(); }
+    else toast("Couldn't save to Google: " + err.message, 7000);
+  } finally { btn.disabled = false; }
+});
+
+$("taskList").addEventListener("change", async e => {
+  const cb = e.target.closest("input[type=checkbox][data-id]"); if (!cb) return;
+  const id = cb.dataset.id, done = cb.checked;
+  try {
+    await api(`${TASKS}/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(done ? { status: "completed" } : { status: "needsAction", completed: null }) });
+    const t = gTasks.find(x => x.id === id); if (t) t.done = done;
+    toast(done ? "Task done ✓" : "Task reopened"); renderTasks(); renderMonth(); renderDay();
+  } catch (err) { cb.checked = !done; toast(err.message === "not-connected" ? "Reconnect Google first." : err.message, 5000); }
+});
+
+$("days").addEventListener("click", e => { const b = e.target.closest(".day"); if (!b) return; selected = b.dataset.d; renderMonth(); renderDay(); });
+$("prevM").addEventListener("click", async () => { view.setMonth(view.getMonth() - 1); renderMonth(); await refreshAll(); });
+$("nextM").addEventListener("click", async () => { view.setMonth(view.getMonth() + 1); renderMonth(); await refreshAll(); });
+$("showDone").addEventListener("click", () => { showCompleted = !showCompleted; renderTasks(); });
+$("connectBtn").addEventListener("click", () => { if (connected()) refreshAll().then(() => toast("Refreshed from Google ✓")); else connect(); });
+
+function setView(v) {
+  $("viewCal").hidden = v !== "cal"; $("viewTask").hidden = v !== "task";
+  $("tabCal").setAttribute("aria-pressed", v === "cal"); $("tabTask").setAttribute("aria-pressed", v === "task");
+  try { localStorage.setItem("wsc_view", v); } catch {}
+  if (location.hash !== "#" + (v === "task" ? "tasks" : "calendar")) history.replaceState(null, "", v === "task" ? "#tasks" : "#calendar");
+}
+$("tabCal").addEventListener("click", () => setView("cal"));
+$("tabTask").addEventListener("click", () => setView("task"));
+
+let startView = location.hash === "#tasks" ? "task" : location.hash === "#calendar" ? "cal" : (() => { try { return localStorage.getItem("wsc_view") || "cal"; } catch { return "cal"; } })();
+setView(startView);
+paintStatus();
+setInterval(paintStatus, 60000);
+renderMonth(); renderDay(); renderTasks();
+if (connected()) refreshAll();
+</script>
+</body>
+</html>
